@@ -5,6 +5,18 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-11-18
+
+### Added
+- Complete Phase 5 Design System & UI Foundation:
+  - Design system specification in `docs/DESIGN.md` (token ramps, AQI scale, Indic typography fallbacks, 4px grid, touch targets, ASCII wireframes).
+  - Semantic CSS tokens in `app/globals.css` supporting dark mode, light mode, and high-contrast mode with visible focus rings.
+  - Accessible UI primitives in `components/ui/`: `Button` (32/44/48px), `Input`, `Textarea`, `Select`, `Switch`, `Tabs`, `Badge` (with colorblind shape icons), `Surface`, `Table`, `Dialog`, `Sheet`, `Toast`, `Progress`, `Skeleton`, `EmptyState`, `PageHeader`, `Icon` (in-repo SVG icons).
+  - Signature `DayStrip` component in `components/feature/day-strip.tsx` with 24-hour horizontal hourly forecast, best/worst window highlights, and accessible table view toggle.
+  - Client state store in `store/use-app-store.ts` using Zustand with persistence, versioning, and privacy-first local storage.
+  - Interactive theme, contrast, and AQI standard switcher in `components/feature/theme-switcher.tsx`.
+  - Comprehensive Playwright layout tests in `tests/layout.spec.ts` passing across Mobile 360, Mobile 390, Tablet 768, and Desktop 1280 in real Chrome.
+
 ## [0.4.0] - 2026-11-18
 
 ### Added

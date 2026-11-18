@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { AqiCategory } from "@/domain/aqi";
 
 export const airSnapshotQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
@@ -28,6 +29,21 @@ export const hourlyForecastItemSchema = z.object({
   aqi: z.number(),
   category: z.string(),
 });
+
+export interface HourlyAirPoint {
+  time: string;
+  pm25: number;
+  pm10?: number;
+  aqi: {
+    aqi: number;
+    category: AqiCategory;
+    categoryLabel: string;
+    dominantPollutant?: string;
+  };
+  temperatureC?: number;
+  windSpeedKmh?: number;
+  relativeHumidity?: number;
+}
 
 export type AirSnapshotQuery = z.infer<typeof airSnapshotQuerySchema>;
 export type ManualAirEntry = z.infer<typeof manualAirEntrySchema>;
