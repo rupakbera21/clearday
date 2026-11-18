@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description:
     "Grounded guidance, daily routines, and indoor air hacks for families navigating winter smog.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
 };
 
