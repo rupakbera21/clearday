@@ -87,3 +87,4 @@ export type TailoredPlan = z.infer<typeof tailoredPlanSchema>;
 export type ImpactExplanation = z.infer<typeof impactExplanationSchema>;
 export type AskQuery = z.infer<typeof askQuerySchema>;
 export type AskResponse = z.infer<typeof askResponseSchema>;
+export type { FactItem } from "@/services/ai/validator";

@@ -78,3 +78,15 @@ export const VEHICLE_INFILTRATION: Record<string, BoundedParameter> = {
   metro_train: { low: 0.30, central: 0.45, high: 0.60, unit: "ratio", source: "Public transit air study", year: 2019, note: "Enclosed air-conditioned rail transit" },
   two_wheeler_cycle: { low: 1.0, central: 1.0, high: 1.0, unit: "ratio", source: "Roadway baseline", year: 2020, note: "Direct exposure on roadway" },
 };
+
+/**
+ * Commute emission factors (g CO2e/km) by transportation mode.
+ * Sourced from DMRC Sustainability Reports, ARAI India, and UK DEFRA.
+ */
+export const COMMUTE_EMISSION_FACTORS: Record<string, BoundedParameter> = {
+  metro: { low: 15, central: 22, high: 35, unit: "g CO2e/km", source: "DMRC Sustainability Report", year: 2022, note: "Electric urban rapid transit" },
+  bus: { low: 45, central: 68, high: 95, unit: "g CO2e/km", source: "ARAI / MoPNG", year: 2021, note: "CNG urban bus per passenger-km" },
+  car_recirc: { low: 120, central: 165, high: 220, unit: "g CO2e/km", source: "ARAI Drive Cycle", year: 2022, note: "Petrol sedan single-occupant" },
+  two_wheeler: { low: 85, central: 110, high: 140, unit: "g CO2e/km", source: "ARAI / CPCB", year: 2021, note: "4-stroke 125cc motorcycle" },
+  cycle_walk: { low: 0, central: 0, high: 0, unit: "g CO2e/km", source: "Zero tailpipe", year: 2024, note: "Active non-motorized mobility" },
+};

@@ -83,6 +83,7 @@ export interface AppState {
   setActivePlan: (plan: TailoredPlan | null) => void;
   updateImpactChoice: <K extends keyof ImpactChoices>(key: K, value: ImpactChoices[K]) => void;
   resetImpactChoices: () => void;
+  resetAllData: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -144,6 +145,34 @@ export const useAppStore = create<AppState>()(
         })),
 
       resetImpactChoices: () => set({ impactChoices: DEFAULT_IMPACT_CHOICES }),
+
+      resetAllData: () => {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.removeItem("clearday_storage");
+        }
+        set({
+          theme: "dark",
+          contrast: "normal",
+          aqiStandard: "india_naqi",
+          lowDataMode: false,
+          readAloud: false,
+          selectedLocation: {
+            id: 1273294,
+            name: "Delhi",
+            country: "India",
+            latitude: 28.61,
+            longitude: 77.21,
+            timezone: "Asia/Kolkata",
+          },
+          airSnapshot: null,
+          manualAirData: null,
+          isAirLoading: false,
+          lastAirFetchTime: null,
+          householdProfile: DEFAULT_FALLBACK_PROFILE,
+          activePlan: null,
+          impactChoices: DEFAULT_IMPACT_CHOICES,
+        });
+      },
     }),
     {
       name: "clearday_storage",

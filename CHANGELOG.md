@@ -5,6 +5,21 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-11-18
+
+### Added
+- Complete Phase 6 Tier 1 Screens and Accessible Tab Navigation:
+  - Screen 1: Air Quality Snapshot (`components/feature/snapshot/`) with live geocoding city search, quick city shortcuts (Delhi, Kolkata, Lahore, Beijing, Los Angeles), DayStrip 24h hourly forecast, metrics grid, stagnation panel ("Why is it bad today"), and manual sensor entry modal.
+  - Screen 2: Household Profile (`components/feature/household/profile-view.tsx`) with natural-language prompt parsing via Gemini, member vulnerability categories, dwelling envelope selector, cooking fuel, and commute options.
+  - Screen 3: Today's Plan (`components/feature/plan/plan-view.tsx`) with optimal outdoor vs peak smog window badges, rule-based instant routine, Severe-Day Mode, and AI personalizer.
+  - Screen 4: Impact Lab (`components/feature/impact/impact-view.tsx`) zero-network what-if sandbox calculating daily inhaled PM2.5 (ug) and tailpipe CO2e avoided across commute/mask/window/purifier choices, with grounded plain-language explanation.
+  - Screen 5: Home Air Toolkit (`components/feature/home-toolkit/home-toolkit-view.tsx`) with single-compartment mass balance CADR & DIY box fan sizing calculator, ACH ratings, and evidence-based Myth vs Fact cards.
+  - Screen 6: Sustainable Alternatives (`components/feature/alternatives/alternatives-view.tsx`) ranking habits across commute, cooking, heating, and waste by exposure cut, emissions avoided, and cost tier.
+  - Screen 7: Ask Clearday (`components/feature/ask/ask-view.tsx`) grounded Q&A with red-flag symptom emergency interception and multi-lingual language selection (English, Hindi, Bengali, Urdu, Punjabi).
+  - Screen 8: Privacy & Data Management (`components/feature/privacy/privacy-view.tsx`) detailing zero-database architecture, local storage footprint inspector, JSON data export, and complete local data wiping.
+  - Main app shell in `app/page.tsx` integrating all 8 Tier 1 screens under accessible keyboard-navigable tablist, ThemeSwitcher, and verified CSS pipeline.
+  - Playwright end-to-end test suite (`tests/e2e.spec.ts`) validating tab navigation, impact sandbox reactivity, DIY box fan calculations, and local data reset across 4 responsive viewports.
+
 ## [0.5.0] - 2026-11-18
 
 ### Added
