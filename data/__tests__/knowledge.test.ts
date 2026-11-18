@@ -4,6 +4,7 @@ import {
   KNOWLEDGE_TOPICS,
   KNOWLEDGE_AUDIENCES,
 } from "../knowledge";
+import { getKnowledgeItemDisplay } from "../knowledge/display";
 
 describe("data/knowledge", () => {
   it("contains between 30 and 60 vetted guidance items", () => {
@@ -56,5 +57,15 @@ describe("data/knowledge", () => {
       limit: 3,
     });
     expect(selected.map((s) => s.id)).toEqual(repeated.map((s) => s.id));
+  });
+
+  it("formats display titles for knowledge items", () => {
+    const known = getKnowledgeItemDisplay("kb_mask_children");
+    expect(known.title).toBe("Mask Sizing and Tolerance for Young Children");
+    expect(known.id).toBe("kb_mask_children");
+
+    const unknown = getKnowledgeItemDisplay("kb_custom_air_ventilation_guidelines");
+    expect(unknown.title).toBe("Custom Air Ventilation Guidelines");
+    expect(unknown.id).toBe("kb_custom_air_ventilation_guidelines");
   });
 });
