@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DayStrip } from "../day-strip";
 import { CitySearch } from "./city-search";
 import { StagnationPanel } from "./stagnation-panel";
+import { OutlookCard } from "./outlook-card";
 import { ManualEntryModal } from "./manual-entry-modal";
 
 const CITY_SHORTCUTS: LocationResult[] = [
@@ -257,6 +258,7 @@ export function SnapshotView() {
 
       <QuickCities selectedId={selectedLocation?.id} onSelect={setSelectedLocation} />
       <DayStrip hourly={hourlyForStrip} windows={airSnapshot?.exposureWindows} currentTimeIso={airSnapshot?.current.time} />
+      <OutlookCard hourly={airSnapshot?.hourly} />
       <SnapshotContent
         isLoading={isAirLoading}
         error={fetchError}

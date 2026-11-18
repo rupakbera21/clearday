@@ -5,6 +5,17 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-11-18
+
+### Added
+- Complete Phase 8 Community Toolkit, Outlook & Productivity Enhancements:
+  - Community Toolkit Screen (`components/feature/community/community-view.tsx`): 1-page printable (@media print) advisories and shareable copyable protocol templates tailored for Schools & Nurseries, Housing Societies (RWAs), and Commercial Workplaces.
+  - RFC 5545 iCalendar (`.ics`) generation and one-click calendar reminder export for optimal low-exposure outdoor windows (`services/calendar.ts`, `services/__tests__/calendar.test.ts`).
+  - 72-Hour Multi-Day Smog & Inversion Outlook card (`components/feature/snapshot/outlook-card.tsx`) analyzing 3-day meteorological dispersion and stagnation risk.
+  - SpeechSynthesis integration in Ask Clearday (`components/feature/ask/ask-view.tsx`) for voice read-aloud in English, Hindi, and Bengali.
+  - Integration of Community view into global tabbed navigation shell (`app/page.tsx`).
+  - Jest-axe WCAG 2.2 AA accessibility verification extended to CommunityView with zero violations.
+
 ## [0.7.0] - 2026-11-18
 
 ### Added

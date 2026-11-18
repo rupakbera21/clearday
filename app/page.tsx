@@ -15,11 +15,13 @@ import { HomeToolkitView } from "@/components/feature/home-toolkit/home-toolkit-
 import { AlternativesView } from "@/components/feature/alternatives/alternatives-view";
 import { ProfileView } from "@/components/feature/household/profile-view";
 import { AskView } from "@/components/feature/ask/ask-view";
+import { CommunityView } from "@/components/feature/community/community-view";
 import { PrivacyView } from "@/components/feature/privacy/privacy-view";
 
 const NAVIGATION_TABS: TabItem[] = [
   { id: "snapshot", label: "Air Snapshot" },
   { id: "plan", label: "Today's Plan" },
+  { id: "community", label: "Community" },
   { id: "impact", label: "Impact Lab" },
   { id: "hacks", label: "Home Toolkit" },
   { id: "alternatives", label: "Alternatives" },
@@ -31,6 +33,7 @@ const NAVIGATION_TABS: TabItem[] = [
 const SCREEN_COMPONENTS: Record<string, React.ReactNode> = {
   snapshot: <SnapshotView />,
   plan: <PlanView />,
+  community: <CommunityView />,
   impact: <ImpactView />,
   hacks: <HomeToolkitView />,
   alternatives: <AlternativesView />,

@@ -13,6 +13,7 @@ import { PrivacyView } from "../privacy/privacy-view";
 import { PlanView } from "../plan/plan-view";
 import { ProfileView } from "../household/profile-view";
 import { AskView } from "../ask/ask-view";
+import { CommunityView } from "../community/community-view";
 
 expect.extend(toHaveNoViolations);
 
@@ -49,6 +50,12 @@ describe("Tier 1 Components Accessibility (WCAG 2.2 AA via jest-axe)", () => {
 
   it("renders AskView with no accessibility violations", async () => {
     const { container } = render(<AskView />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("renders CommunityView with no accessibility violations", async () => {
+    const { container } = render(<CommunityView />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

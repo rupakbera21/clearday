@@ -12,6 +12,7 @@ import { TailoredPlan, TimeBlock } from "@/schemas/ai";
 import { ExposureWindow } from "@/domain/windows";
 import { createRuleBasedPlan } from "@/services/ai/prompts/plan";
 import { selectKnowledgeItems } from "@/data/knowledge/select";
+import { generateICS, downloadICSFile } from "@/services/calendar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
@@ -19,9 +20,11 @@ import { Icon } from "@/components/ui/icon";
 function PlanWindowsCard({
   bestWindow,
   worstWindow,
+  onDownloadReminder,
 }: {
   bestWindow?: ExposureWindow | null;
   worstWindow?: ExposureWindow | null;
+  onDownloadReminder?: () => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -31,7 +34,20 @@ function PlanWindowsCard({
             <Icon name="sun" size={16} />
             Best Window For Outdoors
           </span>
-          <Badge variant="success" showShape={false}>Optimal</Badge>
+          <div className="flex items-center gap-2">
+            {onDownloadReminder && (
+              <button
+                type="button"
+                onClick={onDownloadReminder}
+                className="text-2xs text-emerald-300 hover:text-emerald-100 flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 cursor-pointer"
+                aria-label="Add optimal window to calendar"
+              >
+                <Icon name="calendar" size={12} />
+                Add to Calendar
+              </button>
+            )}
+            <Badge variant="success" showShape={false}>Optimal</Badge>
+          </div>
         </div>
         <p className="text-2xl font-extrabold text-emerald-200 tabular-nums">
           {bestWindow ? `${String(bestWindow.startHour).padStart(2, "0")}:00 - ${String(bestWindow.endHour).padStart(2, "0")}:00` : "13:00 - 15:00"}
@@ -157,6 +173,7 @@ function RoutineHeader({
 export function PlanView() {
   const profile = useAppStore((state) => state.householdProfile);
   const airSnapshot = useAppStore((state) => state.airSnapshot);
+  const selectedLocation = useAppStore((state) => state.selectedLocation);
   const activePlan = useAppStore((state) => state.activePlan);
   const setActivePlan = useAppStore((state) => state.setActivePlan);
 
@@ -189,11 +206,32 @@ export function PlanView() {
     }
   }, [airSnapshot, profile, setActivePlan]);
 
+  const handleDownloadCalendar = useCallback(() => {
+    const best = airSnapshot?.exposureWindows?.bestWindow;
+    if (!best) return;
+
+    const start = new Date();
+    start.setHours(best.startHour, 0, 0, 0);
+    const end = new Date();
+    end.setHours(best.endHour, 0, 0, 0);
+
+    const ics = generateICS({
+      title: "Optimal Outdoor Exposure Window (Clearday)",
+      description: `Safest outdoor window: ${best.recommendation}. Predicted PM2.5: ~${Math.round(best.avgPm25)} ug/m3.`,
+      location: selectedLocation?.name ?? "Current City",
+      startDate: start,
+      endDate: end,
+    });
+
+    downloadICSFile(`clearday-outdoor-window-${best.startHour}h`, ics);
+  }, [airSnapshot, selectedLocation]);
+
   return (
     <section aria-label="Today's Low-Exposure Plan" className="space-y-6">
       <PlanWindowsCard
         bestWindow={airSnapshot?.exposureWindows?.bestWindow}
         worstWindow={airSnapshot?.exposureWindows?.worstWindow}
+        onDownloadReminder={airSnapshot?.exposureWindows?.bestWindow ? handleDownloadCalendar : undefined}
       />
 
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">

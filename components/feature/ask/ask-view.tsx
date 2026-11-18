@@ -42,7 +42,7 @@ function QuickQuestionsBar({ onSelect }: { onSelect: (q: string) => void }) {
   );
 }
 
-function AskAnswerCard({ response }: { response: AskResponse }) {
+function AskAnswerCard({ response, onSpeak }: { response: AskResponse; onSpeak?: (text: string) => void }) {
   const isEmergency = response.citedKnowledgeIds.includes("kb_symptoms_urgent_care");
 
   return (
@@ -58,9 +58,22 @@ function AskAnswerCard({ response }: { response: AskResponse }) {
           <Icon name={isEmergency ? "alert-triangle" : "shield-check"} size={16} />
           {isEmergency ? "Emergency Notice" : "Clearday Advisory"}
         </span>
-        {response.isRuleBased && (
-          <Badge variant="outline" showShape={false}>Rule-Based</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {onSpeak && (
+            <button
+              type="button"
+              onClick={() => onSpeak(response.answer)}
+              className="text-2xs text-sky-300 hover:text-sky-100 flex items-center gap-1 px-2 py-0.5 rounded bg-slate-700/80 border border-slate-600 cursor-pointer"
+              aria-label="Read answer aloud"
+            >
+              <Icon name="volume" size={13} />
+              Read Aloud
+            </button>
+          )}
+          {response.isRuleBased && (
+            <Badge variant="outline" showShape={false}>Rule-Based</Badge>
+          )}
+        </div>
       </div>
 
       <p className="text-sm leading-relaxed">{response.answer}</p>
@@ -177,6 +190,14 @@ export function AskView() {
     }
   };
 
+  const handleSpeak = (text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === "hi" ? "hi-IN" : language === "bn" ? "bn-IN" : "en-US";
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
     <section aria-label="Ask Clearday Q&A" className="space-y-6">
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">
@@ -212,7 +233,7 @@ export function AskView() {
           </p>
         )}
 
-        {response && <AskAnswerCard response={response} />}
+        {response && <AskAnswerCard response={response} onSpeak={handleSpeak} />}
       </div>
     </section>
   );
