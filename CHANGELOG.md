@@ -5,6 +5,21 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-11-18
+
+### Added
+- Phase 9 Documentation, Architecture Diagrams, and Submission Packaging:
+  - System Architecture Specification in `docs/ARCHITECTURE.md` with Mermaid topology, data flow, and multi-tier AI sequence diagrams.
+  - Clinical & Air Safety Framework in `docs/SAFETY.md` detailing non-medical advisory boundaries, regex red-flag symptom emergency interception, and zero-unverified-numbers validation.
+  - Hackathon Evaluation & Traceability Map in `docs/EVALUATION_MAP.md` mapping all 6 judging criteria to implementation files and algorithms.
+  - Executive Submission Notes in `docs/SUBMISSION_NOTES.md`.
+  - 4 Architectural Decision Records in `docs/adr/`:
+    - `001-deterministic-domain-engine.md`: Pure mathematical domain engine independent of LLMs.
+    - `002-multi-tier-ai-ladder.md`: Multi-tier fallback ladder (Gemini -> Groq -> Rule-Based).
+    - `003-grounded-numbers-validator.md`: Grounded-numbers post-processing verification.
+    - `004-zero-database-privacy.md`: Zero-server database client-side privacy architecture.
+  - Verified repository git tracked footprint is 0.84 MB (strictly below the 10 MB ceiling).
+
 ## [0.8.0] - 2026-11-18
 
 ### Added
