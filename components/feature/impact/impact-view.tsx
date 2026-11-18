@@ -100,7 +100,7 @@ function ImpactControls({
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t" style={{ borderColor: "var(--border-subtle)" }}>
         <Switch
           label="Home Air Purifier (HEPA)"
           description="Continuous mechanical filtration in living area"
@@ -131,32 +131,43 @@ function ImpactResultsCards({
   co2eAvoided: number;
   roundTripKm: number;
 }) {
+  const cardStyle: React.CSSProperties = {
+    backgroundColor: "var(--bg-surface-elevated)",
+    borderColor: "var(--border-subtle)",
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-      <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3">
-        <span className="text-xs uppercase font-bold text-sky-400">Estimated Daily Inhaled PM2.5</span>
-        <div className="flex items-baseline gap-3">
-          <span className="text-3xl sm:text-4xl font-extrabold text-slate-100 tabular-nums">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+      <div style={cardStyle} className="p-5 rounded-2xl border space-y-3 shadow-2xs">
+        <span style={{ color: "var(--accent)" }} className="text-xs uppercase font-bold tracking-wider block">
+          Estimated Daily Inhaled PM2.5
+        </span>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <span className="text-3xl sm:text-4xl font-extrabold tabular-nums" style={{ color: "var(--text-primary)" }}>
             {Math.round(chosenExp.totalInhaledMassUg.central)}
           </span>
-          <span className="text-sm font-semibold text-slate-400">ug / day</span>
+          <span className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>µg / day</span>
           <Badge variant="success" showShape={false} className="ml-auto text-xs">
             -{reductionPct}% Exposure
           </Badge>
         </div>
-        <p className="text-xs text-slate-400">
-          Down from <strong className="text-slate-200">{Math.round(baseExp.totalInhaledMassUg.central)} ug</strong> in baseline.
-          Range: [{Math.round(chosenExp.totalInhaledMassUg.low)} - {Math.round(chosenExp.totalInhaledMassUg.high)} ug].
+        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+          Down from <strong style={{ color: "var(--text-primary)" }}>{Math.round(baseExp.totalInhaledMassUg.central)} µg</strong> in baseline.
+          Range: [{Math.round(chosenExp.totalInhaledMassUg.low)} – {Math.round(chosenExp.totalInhaledMassUg.high)} µg].
         </p>
       </div>
 
-      <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3">
-        <span className="text-xs uppercase font-bold text-emerald-400">Avoided Tailpipe Emissions</span>
-        <div className="flex items-baseline gap-3">
-          <span className="text-3xl sm:text-4xl font-extrabold text-slate-100 tabular-nums">{co2eAvoided}</span>
-          <span className="text-sm font-semibold text-slate-400">g CO2e / day</span>
+      <div style={cardStyle} className="p-5 rounded-2xl border space-y-3 shadow-2xs">
+        <span style={{ color: "var(--color-aqi-good)" }} className="text-xs uppercase font-bold tracking-wider block">
+          Avoided Tailpipe Emissions
+        </span>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <span className="text-3xl sm:text-4xl font-extrabold tabular-nums" style={{ color: "var(--text-primary)" }}>
+            {co2eAvoided}
+          </span>
+          <span className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>g CO2e / day</span>
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
           Personal emissions avoided vs combustion commute over a {roundTripKm} km round-trip.
         </p>
       </div>
@@ -174,27 +185,43 @@ function ImpactExplanationBox({
   onExplain: () => void;
 }) {
   return (
-    <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-300">Grounded Impact Narrative</span>
+    <div
+      style={{
+        backgroundColor: "var(--bg-surface-elevated)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className="p-5 rounded-xl border space-y-3 shadow-2xs"
+    >
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+          Grounded Impact Narrative
+        </span>
         <Button variant="outline" size="sm" onClick={onExplain} isLoading={isExplaining} leftIcon={<Icon name="sparkles" size={14} />}>
           Explain in Plain Words
         </Button>
       </div>
       {explanation ? (
-        <div className="space-y-2 pt-1 text-xs text-slate-300">
+        <div className="space-y-2 pt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
           <p className="leading-relaxed">{explanation.narrative}</p>
-          <div className="flex items-center gap-1.5 flex-wrap text-2xs text-slate-500">
+          <div className="flex items-center gap-1.5 flex-wrap text-2xs" style={{ color: "var(--text-muted)" }}>
             <span>Verified Fact Citations:</span>
             {explanation.citedFactIds.map((fid) => (
-              <span key={fid} className="px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-300 border border-slate-700">
+              <span
+                key={fid}
+                style={{
+                  backgroundColor: "var(--bg-surface)",
+                  borderColor: "var(--border-subtle)",
+                  color: "var(--text-primary)",
+                }}
+                className="px-1.5 py-0.5 rounded-sm border font-mono"
+              >
                 {fid}
               </span>
             ))}
           </div>
         </div>
       ) : (
-        <p className="text-xs text-slate-500 italic">
+        <p className="text-xs italic" style={{ color: "var(--text-muted)" }}>
           Click &quot;Explain in Plain Words&quot; to synthesize an honest, grounded narrative citing these computational facts.
         </p>
       )}
@@ -202,16 +229,8 @@ function ImpactExplanationBox({
   );
 }
 
-export function ImpactView() {
-  const choices = useAppStore((state) => state.impactChoices);
-  const updateChoice = useAppStore((state) => state.updateImpactChoice);
-  const airSnapshot = useAppStore((state) => state.airSnapshot);
-  const [isExplaining, setIsExplaining] = useState(false);
-  const [explanation, setExplanation] = useState<ImpactExplanation | null>(null);
-
-  const currentPm25 = airSnapshot?.current.pm25 ?? 180;
-
-  const { baselineExposure, chosenExposure, reductionPct, co2eAvoidedGrams, facts } = useMemo(() => {
+function useImpactComputations(choices: ImpactChoices, currentPm25: number) {
+  return useMemo(() => {
     const baseSegments = buildDaySegments(currentPm25, BASELINE_IMPACT_CHOICES.commuteMode, BASELINE_IMPACT_CHOICES.commuteDistanceKm, BASELINE_IMPACT_CHOICES.maskType, BASELINE_IMPACT_CHOICES.airPurifier, BASELINE_IMPACT_CHOICES.windowBehavior);
     const chosenSegments = buildDaySegments(currentPm25, choices.commuteMode, choices.commuteDistanceKm, choices.maskType, choices.airPurifier, choices.windowBehavior);
     const baseExp = calculateInhaledExposure(baseSegments, "adult");
@@ -232,6 +251,17 @@ export function ImpactView() {
     };
     return { baselineExposure: baseExp, chosenExposure: chosenExp, reductionPct: redPct, co2eAvoidedGrams: co2eAvoided, facts: computedFacts };
   }, [choices, currentPm25]);
+}
+
+export function ImpactView() {
+  const choices = useAppStore((state) => state.impactChoices);
+  const updateChoice = useAppStore((state) => state.updateImpactChoice);
+  const airSnapshot = useAppStore((state) => state.airSnapshot);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const [explanation, setExplanation] = useState<ImpactExplanation | null>(null);
+
+  const currentPm25 = airSnapshot?.current.pm25 ?? 180;
+  const { baselineExposure, chosenExposure, reductionPct, co2eAvoidedGrams, facts } = useImpactComputations(choices, currentPm25);
 
   const handleExplain = async () => {
     setIsExplaining(true);
@@ -252,13 +282,30 @@ export function ImpactView() {
 
   return (
     <section aria-label="Impact Lab What-If Sandbox" className="space-y-6">
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          Impact Lab
+        </h1>
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          Personal exposure and emissions simulator based on microenvironments and travel choices.
+        </p>
+      </div>
+
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-6 rounded-2xl border space-y-6 shadow-2xs"
+      >
         <div>
-          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Icon name="activity" size={20} className="text-sky-400" />
-            <span>Impact Lab: Personal Exposure & Emissions Sandbox</span>
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+            <span style={{ color: "var(--accent)" }}>
+              <Icon name="sparkles" size={20} />
+            </span>
+            <span>Personal Exposure & Emissions Sandbox</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
             Toggle daily choices to observe the mathematical reduction in inhaled PM2.5 and tailpipe emissions.
           </p>
         </div>

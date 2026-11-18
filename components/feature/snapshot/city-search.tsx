@@ -1,89 +1,152 @@
 /**
  * @file city-search.tsx
- * @description Accessible location geocoding search input with debounce and results dropdown.
+ * @description Accessible location geocoding search input with instant as-you-type suggestions,
+ * Indian region priority, and up to 5 matching places.
  * Addresses problem-statement: Location, City search through geocoding, privacy rounding.
  */
 
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { LocationResult } from "@/schemas/geo";
 import { Input } from "@/components/ui/input";
 import { Icon } from "@/components/ui/icon";
+import { useCitySearch } from "./use-city-search";
 
 export interface CitySearchProps {
   onSelectLocation: (loc: LocationResult) => void;
   className?: string;
 }
 
+function SearchDropdownItem({
+  loc,
+  isActive,
+  onSelect,
+}: {
+  loc: LocationResult;
+  isActive: boolean;
+  onSelect: (loc: LocationResult) => void;
+}) {
+  const isIndia = loc.country.toLowerCase() === "india" || loc.timezone === "Asia/Kolkata";
+  const regionLabel = [loc.admin1, loc.country].filter(Boolean).join(", ");
+
+  return (
+    <li
+      id={`city-opt-${loc.id}`}
+      role="option"
+      aria-selected={isActive}
+      onClick={() => onSelect(loc)}
+      style={{
+        backgroundColor: isActive ? "var(--accent-soft)" : undefined,
+      }}
+      className="px-3.5 py-2.5 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center justify-between gap-3 text-left"
+    >
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span style={{ color: isIndia ? "var(--accent)" : "var(--text-muted)" }} className="shrink-0">
+          <Icon name="map-pin" size={14} />
+        </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-xs truncate" style={{ color: "var(--text-primary)" }}>
+              {loc.name}
+            </span>
+            {isIndia && (
+              <span
+                style={{
+                  backgroundColor: "var(--accent-soft)",
+                  color: "var(--accent)",
+                }}
+                className="text-3xs font-semibold px-1.5 py-0.5 rounded-sm shrink-0"
+              >
+                India
+              </span>
+            )}
+          </div>
+          <p className="text-2xs truncate" style={{ color: "var(--text-secondary)" }}>
+            {regionLabel}
+          </p>
+        </div>
+      </div>
+      <span className="text-2xs tabular-nums shrink-0" style={{ color: "var(--text-muted)" }}>
+        {loc.latitude.toFixed(2)}, {loc.longitude.toFixed(2)}
+      </span>
+    </li>
+  );
+}
+
 function SearchDropdown({
   results,
+  activeIndex,
   onSelect,
 }: {
   results: LocationResult[];
+  activeIndex: number;
   onSelect: (loc: LocationResult) => void;
 }) {
   return (
     <ul
+      id="city-search-results"
       role="listbox"
-      aria-label="City search results"
-      className="absolute z-40 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 divide-y divide-slate-800"
+      aria-label="City suggestions"
+      style={{
+        backgroundColor: "var(--bg-surface)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className="absolute z-40 left-0 right-0 mt-1.5 max-h-72 overflow-y-auto rounded-xl border shadow-xl py-1 divide-y divide-subtle"
     >
-      {results.map((loc) => (
-        <li
-          key={loc.id}
-          role="option"
-          aria-selected={false}
-          onClick={() => onSelect(loc)}
-          className="px-4 py-2.5 text-sm cursor-pointer hover:bg-slate-800 transition-colors flex items-center justify-between"
-        >
-          <div>
-            <p className="font-semibold text-slate-100">{loc.name}</p>
-            <p className="text-xs text-slate-400">
-              {[loc.admin1, loc.country].filter(Boolean).join(", ")}
-            </p>
-          </div>
-          <span className="text-2xs text-slate-500 tabular-nums">
-            {loc.latitude.toFixed(2)}, {loc.longitude.toFixed(2)}
-          </span>
-        </li>
+      {results.map((loc, idx) => (
+        <SearchDropdownItem
+          key={`${loc.id}-${loc.latitude}-${loc.longitude}`}
+          loc={loc}
+          isActive={idx === activeIndex}
+          onSelect={onSelect}
+        />
       ))}
     </ul>
   );
 }
 
+function SearchAddons({
+  isLoading,
+  hasQuery,
+  onClear,
+}: {
+  isLoading: boolean;
+  hasQuery: boolean;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      {isLoading && <Icon name="refresh" size={14} className="animate-spin text-muted" />}
+      {hasQuery && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-muted hover:text-primary transition-colors cursor-pointer p-0.5"
+          aria-label="Clear search input"
+        >
+          <Icon name="x" size={13} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function CitySearch({ onSelectLocation, className = "" }: CitySearchProps) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<LocationResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const {
+    query,
+    setQuery,
+    results,
+    activeIndex,
+    isLoading,
+    isOpen,
+    setIsOpen,
+    handleSelect,
+    handleKeyDown,
+    clearSearch,
+  } = useCitySearch(onSelectLocation);
+
   const searchRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`/api/geo/search?q=${encodeURIComponent(query)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setResults(Array.isArray(data.results) ? data.results : []);
-          setIsOpen(true);
-        }
-      } catch {
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -93,13 +156,7 @@ export function CitySearch({ onSelectLocation, className = "" }: CitySearchProps
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSelect = (loc: LocationResult) => {
-    onSelectLocation(loc);
-    setQuery("");
-    setIsOpen(false);
-  };
+  }, [setIsOpen]);
 
   return (
     <div ref={searchRef} className={`relative w-full ${className}`}>
@@ -107,15 +164,28 @@ export function CitySearch({ onSelectLocation, className = "" }: CitySearchProps
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => results.length > 0 && setIsOpen(true)}
-        placeholder="Search city (e.g. Delhi, Kolkata, Lahore)..."
+        onKeyDown={handleKeyDown}
+        placeholder="Search city (e.g. Delhi, Mumbai, Pune, Kolkata)..."
         aria-label="Search city or location"
+        role="combobox"
+        aria-expanded={isOpen && results.length > 0}
+        aria-controls="city-search-results"
+        aria-autocomplete="list"
         leftAddon={<Icon name="search" size={16} />}
         rightAddon={
-          isLoading ? <Icon name="refresh" size={16} className="animate-spin text-sky-400" /> : undefined
+          <SearchAddons
+            isLoading={isLoading}
+            hasQuery={query.length > 0}
+            onClear={clearSearch}
+          />
         }
       />
       {isOpen && results.length > 0 && (
-        <SearchDropdown results={results} onSelect={handleSelect} />
+        <SearchDropdown
+          results={results}
+          activeIndex={activeIndex}
+          onSelect={handleSelect}
+        />
       )}
     </div>
   );

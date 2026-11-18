@@ -6,83 +6,16 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useAppStore } from "@/store/use-app-store";
 import { HouseholdProfile, Member } from "@/schemas/ai";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-
-function NaturalLanguageBox({
-  onParsed,
-}: {
-  onParsed: (profile: HouseholdProfile, status: string) => void;
-}) {
-  const [nlText, setNlText] = useState("");
-  const [isParsing, setIsParsing] = useState(false);
-  const [parseStatus, setParseStatus] = useState<string | null>(null);
-
-  const handleAiParse = async () => {
-    if (nlText.trim().length < 5) return;
-    setIsParsing(true);
-    setParseStatus(null);
-    try {
-      const res = await fetch("/api/ai/parse-household", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: nlText }),
-      });
-      if (!res.ok) throw new Error("Parsing failed");
-      const result = await res.json();
-      if (result.data) {
-        const msg = `Parsed using ${result.providerUsed || "AI"} (${result.serviceTier})`;
-        setParseStatus(msg);
-        onParsed(result.data as HouseholdProfile, msg);
-      }
-    } catch {
-      setParseStatus("Could not parse with AI; please adjust the fields below manually.");
-    } finally {
-      setIsParsing(false);
-    }
-  };
-
-  return (
-    <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-      <div className="flex items-center gap-2 text-sky-400">
-        <Icon name="sparkles" size={18} />
-        <h2 className="text-base font-bold text-slate-100">Quick AI Profile Setup</h2>
-      </div>
-      <p className="text-xs text-slate-400">
-        Describe your family, dwelling, and commute habits in plain words. Our model will extract your structured profile.
-      </p>
-      <Textarea
-        value={nlText}
-        onChange={(e) => setNlText(e.target.value)}
-        placeholder="e.g. Four of us, two kids aged 6 and 9, grandmother with asthma, I cycle 8km to work, LPG cooking, 4th floor flat with an AC and no purifier."
-        rows={3}
-      />
-      <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
-        <span className="text-2xs text-slate-500">
-          {parseStatus && <span className="text-sky-300">{parseStatus}</span>}
-        </span>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleAiParse}
-          isLoading={isParsing}
-          disabled={nlText.trim().length < 5}
-          leftIcon={<Icon name="sparkles" size={16} />}
-        >
-          Parse with AI
-        </Button>
-      </div>
-    </div>
-  );
-}
+import { NaturalLanguageBox } from "./natural-language-box";
 
 function MemberRow({
   member,
@@ -98,10 +31,18 @@ function MemberRow({
   onRemove: () => void;
 }) {
   return (
-    <div className="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div
+      style={{
+        backgroundColor: "var(--bg-surface-elevated)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className="p-3.5 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs"
+    >
       <div className="flex items-center gap-2">
         <Badge variant="outline" showShape={false}>#{index + 1}</Badge>
-        <span className="text-sm font-semibold text-slate-200 capitalize">{member.ageBand.replace("_", " ")}</span>
+        <span className="text-sm font-semibold capitalize" style={{ color: "var(--text-primary)" }}>
+          {member.ageBand.replace("_", " ")}
+        </span>
         {member.conditionCategory !== "none" && (
           <Badge variant="warning" showShape={false} className="capitalize">
             {member.conditionCategory}
@@ -162,7 +103,7 @@ function DwellingAndHabits({
 }) {
   return (
     <>
-      <div className="pt-4 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="pt-4 border-t grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ borderColor: "var(--border-subtle)" }}>
         <Select
           label="Dwelling Type"
           value={profile.homeType}
@@ -205,7 +146,7 @@ function DwellingAndHabits({
         />
       </div>
 
-      <div className="pt-4 border-t border-slate-800">
+      <div className="pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
         <Switch
           label="Air Purifier in Home"
           description="Mechanical HEPA filtration in living or sleeping areas."
@@ -217,10 +158,10 @@ function DwellingAndHabits({
   );
 }
 
-export function ProfileView() {
-  const profile = useAppStore((state) => state.householdProfile);
-  const setProfile = useAppStore((state) => state.setHouseholdProfile);
-
+function useMemberManagement(
+  profile: HouseholdProfile,
+  setProfile: (p: HouseholdProfile) => void,
+) {
   const handleAddMember = () => {
     const newMember: Member = {
       id: `mem_${Date.now()}`,
@@ -243,15 +184,42 @@ export function ProfileView() {
     });
   };
 
+  return { handleAddMember, handleRemoveMember, updateMember };
+}
+
+export function ProfileView() {
+  const profile = useAppStore((state) => state.householdProfile);
+  const setProfile = useAppStore((state) => state.setHouseholdProfile);
+  const { handleAddMember, handleRemoveMember, updateMember } = useMemberManagement(profile, setProfile);
+
   return (
     <section aria-label="Household Profile Configuration" className="space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          Household Profile
+        </h1>
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          Member sensitivities, building infiltration characteristics, and cooking/commute baselines.
+        </p>
+      </div>
+
       <NaturalLanguageBox onParsed={(parsed) => setProfile(parsed)} />
 
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6">
-        <div className="flex items-center justify-between">
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-6 rounded-2xl border space-y-6 shadow-2xs"
+      >
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="space-y-0.5">
-            <h2 className="text-lg font-bold text-slate-100">Household Members</h2>
-            <p className="text-xs text-slate-400">Individual vulnerability profiles for tailored routine advisories.</p>
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+              Household Members
+            </h2>
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              Individual vulnerability profiles for tailored routine advisories.
+            </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleAddMember} leftIcon={<Icon name="check" size={14} />}>
             Add Member
@@ -274,10 +242,18 @@ export function ProfileView() {
         <DwellingAndHabits profile={profile} onChange={(up) => setProfile({ ...profile, ...up })} />
       </div>
 
-      <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 flex items-start gap-3 text-xs text-slate-400">
-        <Icon name="lock" size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-        <p>
-          <strong>Privacy by Design:</strong> Your household profile stays stored in your local browser only. No personal names or addresses are ever transmitted to any database.
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface-elevated)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-4 rounded-xl border flex items-start gap-3 text-xs shadow-2xs"
+      >
+        <span style={{ color: "var(--accent)" }} className="shrink-0 mt-0.5">
+          <Icon name="lock" size={16} />
+        </span>
+        <p style={{ color: "var(--text-secondary)" }}>
+          <strong style={{ color: "var(--text-primary)" }}>Privacy by Design:</strong> Your household profile stays stored in your local browser only. No personal names or addresses are ever transmitted to any database.
         </p>
       </div>
     </section>

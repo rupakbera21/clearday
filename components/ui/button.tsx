@@ -1,7 +1,6 @@
 /**
  * @file button.tsx
- * @description Accessible button primitive with strict 44px mobile touch targets and focus rings.
- * Addresses problem-statement: Touch targets >= 44x44 CSS px, WCAG 2.2 AA.
+ * @description Accessible button primitive using semantic CSS variables with 44px touch targets.
  */
 
 import React, { forwardRef } from "react";
@@ -18,33 +17,62 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   rightIcon?: React.ReactNode;
 }
 
-function getVariantClasses(variant: ButtonVariant): string {
+function getVariantStyles(variant: ButtonVariant): { className: string; style?: React.CSSProperties } {
   switch (variant) {
     case "primary":
-      return "bg-sky-600 text-white hover:bg-sky-500 active:bg-sky-700 disabled:bg-slate-700 disabled:text-slate-400 border border-transparent shadow-sm";
+      return {
+        className: "shadow-xs font-medium cursor-pointer active:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed",
+        style: {
+          backgroundColor: "var(--btn-primary-bg)",
+          color: "var(--btn-primary-text)",
+          border: "1px solid transparent",
+        },
+      };
     case "secondary":
-      return "bg-slate-800 text-slate-100 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 disabled:bg-slate-800/50 disabled:text-slate-500";
+      return {
+        className: "shadow-xs font-medium cursor-pointer hover:opacity-90 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed",
+        style: {
+          backgroundColor: "var(--btn-secondary-bg)",
+          color: "var(--btn-secondary-text)",
+          border: "1px solid var(--btn-secondary-border)",
+        },
+      };
     case "outline":
-      return "bg-transparent text-slate-100 hover:bg-slate-800/60 active:bg-slate-800 border border-slate-600 hover:border-slate-500 disabled:border-slate-800 disabled:text-slate-600";
+      return {
+        className: "font-medium cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed",
+        style: {
+          backgroundColor: "transparent",
+          color: "var(--text-primary)",
+          border: "1px solid var(--border-default)",
+        },
+      };
     case "ghost":
-      return "bg-transparent text-slate-200 hover:bg-slate-800/50 active:bg-slate-800 border border-transparent disabled:text-slate-600";
+      return {
+        className: "font-medium cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed",
+        style: {
+          backgroundColor: "transparent",
+          color: "var(--text-secondary)",
+          border: "1px solid transparent",
+        },
+      };
     case "destructive":
-      return "bg-rose-700 text-white hover:bg-rose-600 active:bg-rose-800 border border-transparent shadow-sm disabled:bg-slate-800 disabled:text-slate-500";
+      return {
+        className: "shadow-xs font-medium text-white bg-rose-600 hover:bg-rose-500 active:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed border border-transparent",
+      };
     default:
-      return "";
+      return { className: "" };
   }
 }
 
 function getSizeClasses(size: ButtonSize): string {
   switch (size) {
     case "sm":
-      return "text-xs px-3 py-1.5 min-h-9 sm:min-h-9 min-w-9 touch-target";
-    case "md":
-      return "text-sm px-4 py-2 min-h-11 min-w-11";
+      return "text-xs px-3 py-1.5 min-h-9 min-w-9 rounded-lg touch-target";
     case "lg":
-      return "text-base px-6 py-3 min-h-12 min-w-12 font-medium";
+      return "text-base px-5 py-2.5 min-h-12 min-w-12 rounded-xl font-medium";
+    case "md":
     default:
-      return "";
+      return "text-sm px-4 py-2 min-h-11 min-w-11 rounded-lg";
   }
 }
 
@@ -56,33 +84,35 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     leftIcon,
     rightIcon,
     children,
-    disabled,
     className = "",
-    type = "button",
+    disabled,
     ...props
   },
   ref,
 ) {
-  const variantClass = getVariantClasses(variant);
+  const vInfo = getVariantStyles(variant);
   const sizeClass = getSizeClasses(size);
-  const isDisabled = disabled || isLoading;
 
   return (
     <button
       ref={ref}
-      type={type}
-      disabled={isDisabled}
-      aria-busy={isLoading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors cursor-pointer disabled:cursor-not-allowed select-none ${variantClass} ${sizeClass} ${className}`}
+      disabled={disabled || isLoading}
+      style={vInfo.style}
+      className={`inline-flex items-center justify-center gap-2 select-none text-center transition-all focus-visible:outline-2 ${vInfo.className} ${sizeClass} ${className}`}
       {...props}
     >
       {isLoading ? (
-        <Icon name="refresh" size={16} className="animate-spin" aria-label="Loading" />
+        <span className="flex items-center gap-2">
+          <Icon name="refresh" size={16} className="animate-spin" aria-hidden="true" />
+          <span>Loading...</span>
+        </span>
       ) : (
-        leftIcon
+        <>
+          {leftIcon}
+          {children}
+          {rightIcon}
+        </>
       )}
-      <span>{children}</span>
-      {!isLoading && rightIcon}
     </button>
   );
 });

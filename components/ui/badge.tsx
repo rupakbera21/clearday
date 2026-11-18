@@ -1,7 +1,6 @@
 /**
  * @file badge.tsx
- * @description Accessible badge component with semantic color scales and color-blind shape indicators.
- * Addresses problem-statement: Semantic AQI ramp that stays distinguishable in grayscale and color-vision deficiency.
+ * @description Accessible badge with semantic AQI and feedback token support.
  */
 
 import React from "react";
@@ -44,41 +43,43 @@ function getAqiShape(cat: AqiCategory): IconName {
   }
 }
 
-function getAqiColorClasses(cat: AqiCategory): string {
-  switch (cat) {
-    case "good":
-      return "bg-emerald-950 text-emerald-300 border-emerald-800";
-    case "satisfactory":
-      return "bg-lime-950 text-lime-300 border-lime-800";
-    case "moderate":
-      return "bg-amber-950 text-amber-300 border-amber-800";
-    case "poor":
-      return "bg-orange-950 text-orange-300 border-orange-800";
-    case "very_poor":
-      return "bg-rose-950 text-rose-300 border-rose-800";
-    case "severe":
-      return "bg-purple-950 text-purple-300 border-purple-800";
-    default:
-      return "bg-slate-800 text-slate-300 border-slate-700";
-  }
-}
-
-function getVariantClasses(variant: BadgeVariant): string {
+function getVariantStyles(variant: BadgeVariant): { className: string; style?: React.CSSProperties } {
   switch (variant) {
-    case "default":
-      return "bg-slate-800 text-slate-200 border-slate-700";
-    case "outline":
-      return "bg-transparent text-slate-300 border-slate-600";
     case "success":
-      return "bg-emerald-950 text-emerald-300 border-emerald-800";
+      return {
+        className: "text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40",
+      };
     case "warning":
-      return "bg-amber-950 text-amber-300 border-amber-800";
+      return {
+        className: "text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40",
+      };
     case "danger":
-      return "bg-rose-950 text-rose-300 border-rose-800";
+      return {
+        className: "text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40",
+      };
     case "info":
-      return "bg-sky-950 text-sky-300 border-sky-800";
+      return {
+        className: "text-teal-700 dark:text-teal-300 border-teal-300 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40",
+      };
+    case "outline":
+      return {
+        className: "text-muted border",
+        style: {
+          borderColor: "var(--border-default)",
+          color: "var(--text-secondary)",
+          backgroundColor: "transparent",
+        },
+      };
+    case "default":
     default:
-      return "bg-slate-800 text-slate-200 border-slate-700";
+      return {
+        className: "border",
+        style: {
+          backgroundColor: "var(--bg-surface-elevated)",
+          borderColor: "var(--border-subtle)",
+          color: "var(--text-primary)",
+        },
+      };
   }
 }
 
@@ -90,21 +91,43 @@ export function Badge({
   children,
   ...props
 }: BadgeProps) {
-  const colorClasses = aqiCategory
-    ? getAqiColorClasses(aqiCategory)
-    : getVariantClasses(variant);
+  if (variant === "aqi" && aqiCategory) {
+    const shape = getAqiShape(aqiCategory);
+    const style: React.CSSProperties = {
+      backgroundColor: `var(--bg-aqi-${aqiCategory.replace("_", "-")})`,
+      color: `var(--color-aqi-${aqiCategory.replace("_", "-")})`,
+      borderColor: `var(--color-aqi-${aqiCategory.replace("_", "-")})`,
+    };
 
-  const shapeIcon = aqiCategory && showShape ? getAqiShape(aqiCategory) : null;
+    return (
+      <span
+        style={style}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold rounded-full border shadow-2xs select-none tabular-nums ${className}`}
+        {...props}
+      >
+        {showShape && (
+          <Icon
+            name={shape}
+            size={10}
+            className="inline-block shrink-0 align-middle"
+            aria-label={aqiCategory}
+            role="img"
+          />
+        )}
+        <span>{children}</span>
+      </span>
+    );
+  }
+
+  const vInfo = getVariantStyles(variant);
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border shadow-xs select-none tabular-nums ${colorClasses} ${className}`}
+      style={vInfo.style}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded-full border select-none ${vInfo.className} ${className}`}
       {...props}
     >
-      {shapeIcon && (
-        <Icon name={shapeIcon} size={10} className="shrink-0" aria-label={aqiCategory} />
-      )}
-      <span>{children}</span>
+      {children}
     </span>
   );
 }

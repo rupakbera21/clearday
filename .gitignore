@@ -37,3 +37,9 @@ yarn-error.log*
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# temporary and local
+/screenshots/
+/scratch/
+/.vercel/
+

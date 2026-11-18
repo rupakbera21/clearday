@@ -14,13 +14,24 @@ export interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> 
 
 export function Table({ caption, className = "", children, ...props }: TableProps) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-slate-700/80">
+    <div
+      style={{ borderColor: "var(--border-subtle)" }}
+      className="w-full overflow-x-auto rounded-xl border shadow-2xs"
+    >
       <table
-        className={`w-full text-left text-sm text-slate-200 border-collapse tabular-nums ${className}`}
+        style={{ color: "var(--text-primary)" }}
+        className={`w-full text-left text-sm border-collapse tabular-nums ${className}`}
         {...props}
       >
         {caption && (
-          <caption className="p-3 text-xs text-left font-medium text-slate-400 bg-slate-900 border-b border-slate-800">
+          <caption
+            style={{
+              backgroundColor: "var(--bg-surface-elevated)",
+              borderColor: "var(--border-subtle)",
+              color: "var(--text-secondary)",
+            }}
+            className="p-3 text-xs text-left font-medium border-b"
+          >
             {caption}
           </caption>
         )}
@@ -32,18 +43,36 @@ export function Table({ caption, className = "", children, ...props }: TableProp
 
 export function TableHead({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <thead className={`bg-slate-900/90 text-xs uppercase font-semibold text-slate-300 border-b border-slate-700 ${className}`}>
+    <thead
+      style={{
+        backgroundColor: "var(--bg-surface-elevated)",
+        borderColor: "var(--border-subtle)",
+        color: "var(--text-secondary)",
+      }}
+      className={`text-xs uppercase font-semibold border-b ${className}`}
+    >
       {children}
     </thead>
   );
 }
 
 export function TableBody({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <tbody className={`divide-y divide-slate-800 bg-slate-800/40 ${className}`}>{children}</tbody>;
+  return (
+    <tbody
+      style={{ backgroundColor: "var(--bg-surface)" }}
+      className={`divide-y divide-subtle ${className}`}
+    >
+      {children}
+    </tbody>
+  );
 }
 
 export function TableRow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <tr className={`hover:bg-slate-700/40 transition-colors ${className}`}>{children}</tr>;
+  return (
+    <tr className={`hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${className}`}>
+      {children}
+    </tr>
+  );
 }
 
 export function TableHeaderCell({
@@ -62,6 +91,18 @@ export function TableHeaderCell({
   );
 }
 
-export function TableCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <td className={`px-4 py-3 text-sm whitespace-nowrap ${className}`}>{children}</td>;
+export function TableCell({
+  children,
+  className = "",
+  style,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <td style={style} className={`px-4 py-3 text-sm whitespace-nowrap ${className}`}>
+      {children}
+    </td>
+  );
 }

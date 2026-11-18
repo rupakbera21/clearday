@@ -17,6 +17,7 @@ interface OpenMeteoGeoRawResult {
   latitude: number;
   longitude: number;
   country?: string;
+  country_code?: string;
   admin1?: string;
   timezone?: string;
 }
@@ -25,8 +26,35 @@ interface OpenMeteoGeoResponse {
   results?: OpenMeteoGeoRawResult[];
 }
 
+function prioritizeIndianLocations(
+  rawResults: OpenMeteoGeoRawResult[],
+  limit: number,
+): LocationResult[] {
+  const isIndia = (item: OpenMeteoGeoRawResult) =>
+    item.country?.toLowerCase() === "india" || item.country_code?.toUpperCase() === "IN";
+
+  const sorted = [...rawResults].sort((a, b) => {
+    const aIn = isIndia(a);
+    const bIn = isIndia(b);
+    if (aIn && !bIn) return -1;
+    if (!aIn && bIn) return 1;
+    return 0;
+  });
+
+  return sorted.slice(0, limit).map((item) => ({
+    id: item.id,
+    name: item.name,
+    country: item.country ?? "",
+    admin1: item.admin1,
+    latitude: Math.round(item.latitude * 100) / 100,
+    longitude: Math.round(item.longitude * 100) / 100,
+    timezone: item.timezone || "UTC",
+  }));
+}
+
 /**
  * Searches cities using Open-Meteo geocoding API with bounded caching.
+ * Prioritizes Indian region matches and returns up to `limit` results.
  */
 export async function searchCities(query: string, limit = 5): Promise<LocationResult[]> {
   const trimmed = query.trim().toLowerCase();
@@ -39,7 +67,8 @@ export async function searchCities(query: string, limit = 5): Promise<LocationRe
   }
 
   const encoded = encodeURIComponent(trimmed);
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=${limit}&language=en&format=json`;
+  const fetchCount = Math.max(15, limit * 3);
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=${fetchCount}&language=en&format=json`;
 
   try {
     const res = await secureFetch(url, { timeoutMs: 5000 });
@@ -53,15 +82,7 @@ export async function searchCities(query: string, limit = 5): Promise<LocationRe
       return [];
     }
 
-    const parsed: LocationResult[] = data.results.map((item) => ({
-      id: item.id,
-      name: item.name,
-      country: item.country ?? "",
-      admin1: item.admin1,
-      latitude: Math.round(item.latitude * 100) / 100,
-      longitude: Math.round(item.longitude * 100) / 100,
-      timezone: item.timezone || "UTC",
-    }));
+    const parsed = prioritizeIndianLocations(data.results, limit);
 
     geoCache.set(cacheKey, parsed);
     return parsed;

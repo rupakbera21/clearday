@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,38 +18,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-900 text-slate-100 antialiased">
+      <body className="min-h-screen antialiased selection:bg-teal-500/20 selection:text-teal-900 dark:selection:text-teal-100">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-amber-500 focus:text-slate-900 focus:z-50"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-emerald-700 focus:text-white focus:rounded-lg focus:shadow-lg focus:z-50 focus:outline-2"
         >
           Skip to main content
         </a>
-        <div className="flex min-h-screen flex-col">
-          <header className="border-b border-teal-900/60 bg-emerald-950/80 px-4 py-3 backdrop-blur-md">
-            <div className="mx-auto flex max-w-5xl items-center justify-between">
-              <div className="flex items-center">
-                <Image
-                  src="/logo.png"
-                  alt="Clearday"
-                  width={150}
-                  height={50}
-                  priority
-                  className="h-12 w-auto object-contain filter drop-shadow-md"
-                />
-              </div>
-              <span className="text-xs font-semibold text-teal-200 tracking-wide uppercase">
-                Urban Smog & Health Assistant
-              </span>
-            </div>
-          </header>
-          <main id="main-content" className="flex-1">
-            {children}
-          </main>
-          <footer className="border-t border-slate-800 bg-slate-950 px-4 py-6 text-center text-xs text-slate-500">
-            <p>Data provided by Open-Meteo under open licenses. Model estimates for informational guidance only.</p>
-          </footer>
-        </div>
+        {children}
       </body>
     </html>
   );

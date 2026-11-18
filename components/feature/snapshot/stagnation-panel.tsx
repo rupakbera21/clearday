@@ -20,20 +20,20 @@ export function StagnationPanel({ stagnation, className = "" }: StagnationPanelP
 
   return (
     <div
-      className={`rounded-2xl border p-4 sm:p-5 transition-colors space-y-3 ${
-        isSevere
-          ? "bg-slate-900 border-rose-900/60"
-          : "bg-slate-900/60 border-slate-800"
-      } ${className}`}
+      style={{
+        backgroundColor: "var(--bg-surface)",
+        borderColor: isSevere ? "var(--color-aqi-very-poor)" : "var(--border-subtle)",
+      }}
+      className={`rounded-2xl border p-5 transition-colors space-y-3.5 shadow-2xs ${className}`}
     >
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <Icon
-            name={isSevere ? "alert-triangle" : "info"}
-            size={18}
-            className={isSevere ? "text-rose-400" : "text-sky-400"}
-          />
-          <h3 className="text-sm font-bold text-slate-100">Why is it bad today?</h3>
+          <span style={{ color: isSevere ? "var(--color-aqi-very-poor)" : "var(--accent)" }}>
+            <Icon name={isSevere ? "alert-triangle" : "info"} size={18} />
+          </span>
+          <h3 className="text-sm font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+            Why is it bad today?
+          </h3>
         </div>
         <Badge
           variant={isSevere ? "danger" : "default"}
@@ -44,17 +44,17 @@ export function StagnationPanel({ stagnation, className = "" }: StagnationPanelP
         </Badge>
       </div>
 
-      <p className="text-xs text-slate-300 leading-relaxed">
-        {stagnation.sourceHintLabel} (PM2.5/PM10 ratio: {stagnation.pmRatio})
+      <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+        {stagnation.sourceHintLabel} (PM2.5/PM10 ratio: <span className="tabular-nums font-semibold">{stagnation.pmRatio}</span>)
       </p>
 
       {activeFactors.length > 0 && (
-        <ul className="space-y-1.5 pt-1">
+        <ul className="space-y-2 pt-1">
           {activeFactors.map((factor) => (
-            <li key={factor.factor} className="flex items-start gap-2 text-xs text-slate-400">
-              <span className="text-sky-400 mt-0.5">•</span>
+            <li key={factor.factor} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
+              <span style={{ color: "var(--accent)" }} className="mt-0.5">•</span>
               <span>
-                <strong className="text-slate-300">{factor.title}:</strong> {factor.explanation}
+                <strong style={{ color: "var(--text-primary)" }}>{factor.title}:</strong> {factor.explanation}
               </span>
             </li>
           ))}
@@ -62,8 +62,8 @@ export function StagnationPanel({ stagnation, className = "" }: StagnationPanelP
       )}
 
       {stagnation.summaryCaveat && (
-        <div className="pt-2 border-t border-slate-800/80">
-          <p className="text-2xs text-slate-500 italic">
+        <div className="pt-2.5 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+          <p className="text-2xs italic" style={{ color: "var(--text-muted)" }}>
             Caveat: {stagnation.summaryCaveat}
           </p>
         </div>

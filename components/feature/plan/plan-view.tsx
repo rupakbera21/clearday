@@ -12,6 +12,7 @@ import { TailoredPlan, TimeBlock } from "@/schemas/ai";
 import { ExposureWindow } from "@/domain/windows";
 import { createRuleBasedPlan } from "@/services/ai/prompts/plan";
 import { selectKnowledgeItems } from "@/data/knowledge/select";
+import { getKnowledgeItemDisplay } from "@/data/knowledge";
 import { generateICS, downloadICSFile } from "@/services/calendar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,9 +29,15 @@ function PlanWindowsCard({
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div className="p-4 sm:p-5 rounded-2xl bg-emerald-950/40 border border-emerald-800 space-y-2">
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-5 rounded-2xl border space-y-2.5 shadow-2xs"
+      >
         <div className="flex items-center justify-between">
-          <span className="text-xs uppercase font-bold text-emerald-400 flex items-center gap-1.5">
+          <span style={{ color: "var(--color-aqi-good)" }} className="text-xs uppercase font-bold flex items-center gap-1.5">
             <Icon name="sun" size={16} />
             Best Window For Outdoors
           </span>
@@ -39,7 +46,11 @@ function PlanWindowsCard({
               <button
                 type="button"
                 onClick={onDownloadReminder}
-                className="text-2xs text-emerald-300 hover:text-emerald-100 flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 cursor-pointer"
+                style={{
+                  color: "var(--color-aqi-good)",
+                  borderColor: "var(--color-aqi-good)",
+                }}
+                className="text-2xs flex items-center gap-1 px-2.5 py-1 rounded-lg border font-medium cursor-pointer hover:opacity-80 transition-opacity"
                 aria-label="Add optimal window to calendar"
               >
                 <Icon name="calendar" size={12} />
@@ -49,26 +60,32 @@ function PlanWindowsCard({
             <Badge variant="success" showShape={false}>Optimal</Badge>
           </div>
         </div>
-        <p className="text-2xl font-extrabold text-emerald-200 tabular-nums">
-          {bestWindow ? `${String(bestWindow.startHour).padStart(2, "0")}:00 - ${String(bestWindow.endHour).padStart(2, "0")}:00` : "13:00 - 15:00"}
+        <p className="text-2xl font-extrabold tabular-nums tracking-tight" style={{ color: "var(--text-primary)" }}>
+          {bestWindow ? `${String(bestWindow.startHour).padStart(2, "0")}:00 – ${String(bestWindow.endHour).padStart(2, "0")}:00` : "13:00 – 15:00"}
         </p>
-        <p className="text-xs text-emerald-300/90 leading-relaxed">
+        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           {bestWindow?.recommendation ?? "Boundary layer is highest; ambient PM2.5 dips to day's lowest concentration."}
         </p>
       </div>
 
-      <div className="p-4 sm:p-5 rounded-2xl bg-rose-950/40 border border-rose-800 space-y-2">
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-5 rounded-2xl border space-y-2.5 shadow-2xs"
+      >
         <div className="flex items-center justify-between">
-          <span className="text-xs uppercase font-bold text-rose-400 flex items-center gap-1.5">
+          <span style={{ color: "var(--color-aqi-very-poor)" }} className="text-xs uppercase font-bold flex items-center gap-1.5">
             <Icon name="alert-triangle" size={16} />
             Avoid Outdoor Movement
           </span>
           <Badge variant="danger" showShape={false}>Peak Smog</Badge>
         </div>
-        <p className="text-2xl font-extrabold text-rose-200 tabular-nums">
-          {worstWindow ? `${String(worstWindow.startHour).padStart(2, "0")}:00 - ${String(worstWindow.endHour).padStart(2, "0")}:00` : "07:00 - 09:00"}
+        <p className="text-2xl font-extrabold tabular-nums tracking-tight" style={{ color: "var(--text-primary)" }}>
+          {worstWindow ? `${String(worstWindow.startHour).padStart(2, "0")}:00 – ${String(worstWindow.endHour).padStart(2, "0")}:00` : "07:00 – 09:00"}
         </p>
-        <p className="text-xs text-rose-300/90 leading-relaxed">
+        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           {worstWindow?.recommendation ?? "Morning surface inversion traps vehicle and biomass emissions. Avoid morning runs and outdoor play."}
         </p>
       </div>
@@ -78,12 +95,18 @@ function PlanWindowsCard({
 
 function SevereModeBanner() {
   return (
-    <div className="p-4 rounded-xl bg-purple-950/60 border border-purple-800 space-y-2">
-      <div className="flex items-center gap-2 text-purple-300 font-bold text-sm">
+    <div
+      style={{
+        backgroundColor: "var(--bg-aqi-severe)",
+        borderColor: "var(--color-aqi-severe)",
+      }}
+      className="p-4 rounded-xl border space-y-1.5"
+    >
+      <div className="flex items-center gap-2 font-bold text-sm" style={{ color: "var(--color-aqi-severe)" }}>
         <Icon name="alert-triangle" size={18} />
         <span>Severe-Day Contingency Action Plan</span>
       </div>
-      <p className="text-xs text-purple-200 leading-relaxed">
+      <p className="text-xs leading-relaxed" style={{ color: "var(--text-primary)" }}>
         When ambient AQI exceeds 400 (Severe), all non-essential outdoor commutes, school sports, and outdoor exercise should be paused. Seal doors with damp towels, operate HEPA filtration continuously on high in sleeping rooms, and wear a certified N95 respirator if stepping outside is unavoidable.
       </p>
     </div>
@@ -92,31 +115,54 @@ function SevereModeBanner() {
 
 function PlanBlockItem({ block }: { block: TimeBlock }) {
   return (
-    <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-2">
+    <div
+      style={{
+        backgroundColor: "var(--bg-surface-elevated)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className="p-4 rounded-xl border space-y-2 shadow-2xs"
+    >
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-sm text-sky-400 tabular-nums">{block.timeRange}</span>
-          <span className="text-sm font-semibold text-slate-200">{block.activity}</span>
+        <div className="flex items-center gap-2.5">
+          <span className="font-bold text-sm tabular-nums" style={{ color: "var(--accent)" }}>
+            {block.timeRange}
+          </span>
+          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            {block.activity}
+          </span>
         </div>
         <Badge variant="outline" showShape={false} className="capitalize text-2xs">
           {block.microenvironment.replace("_", " ")}
         </Badge>
       </div>
 
-      <p className="text-xs text-slate-300 leading-relaxed">
-        <strong className="text-slate-100">Action:</strong> {block.actionAdvice}
+      <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+        <strong style={{ color: "var(--text-primary)" }}>Action:</strong> {block.actionAdvice}
       </p>
-      <p className="text-2xs text-slate-400">
-        <strong className="text-slate-300">Why:</strong> {block.reason}
+      <p className="text-2xs" style={{ color: "var(--text-muted)" }}>
+        <strong style={{ color: "var(--text-secondary)" }}>Why:</strong> {block.reason}
       </p>
+
       {block.citedKnowledgeIds.length > 0 && (
-        <div className="flex items-center gap-1.5 pt-1 text-2xs text-slate-500">
+        <div className="flex items-center gap-1.5 pt-1.5 text-2xs flex-wrap" style={{ color: "var(--text-muted)" }}>
           <span>Vetted Guidance:</span>
-          {block.citedKnowledgeIds.map((kid) => (
-            <span key={kid} className="px-1.5 py-0.5 rounded-sm bg-slate-800 text-slate-400 border border-slate-700">
-              {kid}
-            </span>
-          ))}
+          {block.citedKnowledgeIds.map((kid) => {
+            const display = getKnowledgeItemDisplay(kid);
+            return (
+              <span
+                key={kid}
+                title={kid}
+                style={{
+                  backgroundColor: "var(--bg-surface)",
+                  borderColor: "var(--border-subtle)",
+                  color: "var(--text-secondary)",
+                }}
+                className="px-2 py-0.5 rounded-md border font-medium"
+              >
+                {display.title}
+              </span>
+            );
+          })}
         </div>
       )}
     </div>
@@ -140,15 +186,17 @@ function RoutineHeader({
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-slate-100">{activePlan?.headline ?? "Low-Emission Daily Routine"}</h2>
+          <h2 className="text-base sm:text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+            {activePlan?.headline ?? "Low-Emission Daily Routine"}
+          </h2>
           {activePlan?.isRuleBased && <Badge variant="outline" showShape={false}>Rule-Based</Badge>}
         </div>
-        <p className="text-xs text-slate-400 mt-1 max-w-xl">
+        <p className="text-xs mt-1 max-w-xl" style={{ color: "var(--text-secondary)" }}>
           {activePlan?.summary ?? "Prioritize outdoor tasks during lowest-exposure hours and seal indoor living areas during inversion peaks."}
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <Button
           variant={severeMode ? "destructive" : "outline"}
           size="sm"
@@ -168,6 +216,24 @@ function RoutineHeader({
       </div>
     </div>
   );
+}
+
+function downloadOptimalWindowIcs(best?: ExposureWindow | null, locationName?: string) {
+  if (!best) return;
+  const start = new Date();
+  start.setHours(best.startHour, 0, 0, 0);
+  const end = new Date();
+  end.setHours(best.endHour, 0, 0, 0);
+
+  const ics = generateICS({
+    title: "Optimal Outdoor Exposure Window (Clearday)",
+    description: `Safest outdoor window: ${best.recommendation}. Predicted PM2.5: ~${Math.round(best.avgPm25)} ug/m3.`,
+    location: locationName ?? "Current City",
+    startDate: start,
+    endDate: end,
+  });
+
+  downloadICSFile(`clearday-outdoor-window-${best.startHour}h`, ics);
 }
 
 export function PlanView() {
@@ -206,35 +272,33 @@ export function PlanView() {
     }
   }, [airSnapshot, profile, setActivePlan]);
 
-  const handleDownloadCalendar = useCallback(() => {
-    const best = airSnapshot?.exposureWindows?.bestWindow;
-    if (!best) return;
-
-    const start = new Date();
-    start.setHours(best.startHour, 0, 0, 0);
-    const end = new Date();
-    end.setHours(best.endHour, 0, 0, 0);
-
-    const ics = generateICS({
-      title: "Optimal Outdoor Exposure Window (Clearday)",
-      description: `Safest outdoor window: ${best.recommendation}. Predicted PM2.5: ~${Math.round(best.avgPm25)} ug/m3.`,
-      location: selectedLocation?.name ?? "Current City",
-      startDate: start,
-      endDate: end,
-    });
-
-    downloadICSFile(`clearday-outdoor-window-${best.startHour}h`, ics);
-  }, [airSnapshot, selectedLocation]);
+  const bestWindow = airSnapshot?.exposureWindows?.bestWindow;
+  const onDownloadReminder = bestWindow ? () => downloadOptimalWindowIcs(bestWindow, selectedLocation?.name) : undefined;
 
   return (
     <section aria-label="Today's Low-Exposure Plan" className="space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          Today's Plan
+        </h1>
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          Hour-by-hour exposure schedule tailored to current air conditions and household sensitivities.
+        </p>
+      </div>
+
       <PlanWindowsCard
-        bestWindow={airSnapshot?.exposureWindows?.bestWindow}
+        bestWindow={bestWindow}
         worstWindow={airSnapshot?.exposureWindows?.worstWindow}
-        onDownloadReminder={airSnapshot?.exposureWindows?.bestWindow ? handleDownloadCalendar : undefined}
+        onDownloadReminder={onDownloadReminder}
       />
 
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-6 rounded-2xl border space-y-5 shadow-2xs"
+      >
         <RoutineHeader
           activePlan={activePlan}
           severeMode={severeMode}

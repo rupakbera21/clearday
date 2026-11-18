@@ -1,7 +1,6 @@
 /**
  * @file switch.tsx
  * @description Accessible toggle switch with role="switch" and 44px touch target.
- * Addresses problem-statement: Accessibility, Touch targets >= 44x44.
  */
 
 import React, { useId } from "react";
@@ -41,12 +40,16 @@ export function Switch({
       {(label || description) && (
         <div className="flex-1 select-none">
           {label && (
-            <label htmlFor={switchId} className="block text-sm font-medium text-slate-200 cursor-pointer">
+            <label
+              htmlFor={switchId}
+              style={{ color: "var(--text-primary)" }}
+              className="block text-sm font-medium cursor-pointer"
+            >
               {label}
             </label>
           )}
           {description && (
-            <p id={descId} className="text-xs text-slate-400">
+            <p id={descId} style={{ color: "var(--text-muted)" }} className="text-xs mt-0.5">
               {description}
             </p>
           )}
@@ -63,12 +66,15 @@ export function Switch({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         onKeyDown={handleKeyDown}
-        className={`relative inline-flex items-center h-7 w-12 shrink-0 rounded-full cursor-pointer transition-colors p-1 disabled:opacity-50 disabled:cursor-not-allowed touch-target ${checked ? "bg-sky-600" : "bg-slate-700 hover:bg-slate-600"
-          }`}
+        style={{
+          backgroundColor: checked ? "var(--accent)" : "var(--border-strong)",
+        }}
+        className="relative inline-flex items-center h-7 w-12 shrink-0 rounded-full cursor-pointer transition-colors p-1 disabled:opacity-50 disabled:cursor-not-allowed touch-target"
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${checked ? "translate-x-5" : "translate-x-0"
-            }`}
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+            checked ? "translate-x-5" : "translate-x-0"
+          }`}
         />
       </button>
     </div>

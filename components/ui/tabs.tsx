@@ -21,6 +21,14 @@ export interface TabsProps {
   className?: string;
 }
 
+function calculateNextTabIndex(key: string, index: number, length: number): number | null {
+  if (key === "ArrowRight") return (index + 1) % length;
+  if (key === "ArrowLeft") return (index - 1 + length) % length;
+  if (key === "Home") return 0;
+  if (key === "End") return length - 1;
+  return null;
+}
+
 export function Tabs({
   tabs,
   activeTab,
@@ -32,19 +40,8 @@ export function Tabs({
   const tablistId = useId();
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    let targetIndex = index;
-    if (e.key === "ArrowRight") {
-      targetIndex = (index + 1) % tabs.length;
-    } else if (e.key === "ArrowLeft") {
-      targetIndex = (index - 1 + tabs.length) % tabs.length;
-    } else if (e.key === "Home") {
-      targetIndex = 0;
-    } else if (e.key === "End") {
-      targetIndex = tabs.length - 1;
-    } else {
-      return;
-    }
-
+    const targetIndex = calculateNextTabIndex(e.key, index, tabs.length);
+    if (targetIndex === null) return;
     e.preventDefault();
     const targetTab = tabs[targetIndex];
     if (targetTab) {
@@ -57,7 +54,11 @@ export function Tabs({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={`flex items-center gap-1.5 p-1.5 bg-emerald-950/60 border border-teal-900/60 rounded-2xl overflow-x-auto no-scrollbar shadow-inner ${className}`}
+      style={{
+        backgroundColor: "var(--bg-surface-elevated)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className={`flex items-center gap-1.5 p-1.5 border rounded-xl overflow-x-auto no-scrollbar shadow-2xs ${className}`}
     >
       {tabs.map((tab, idx) => {
         const isSelected = tab.id === activeTab;
@@ -75,15 +76,27 @@ export function Tabs({
             tabIndex={isSelected ? 0 : -1}
             onClick={() => onChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
-            className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl whitespace-nowrap transition-all min-h-11 cursor-pointer select-none ${isSelected
-              ? "bg-teal-700 text-amber-300 shadow-md border border-teal-500/50"
-              : "text-teal-200/70 hover:text-teal-100 hover:bg-teal-900/40"
-              }`}
+            style={{
+              backgroundColor: isSelected ? "var(--bg-surface)" : "transparent",
+              borderColor: isSelected ? "var(--border-subtle)" : "transparent",
+              color: isSelected ? "var(--text-primary)" : "var(--text-secondary)",
+            }}
+            className={`inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all min-h-9 cursor-pointer select-none border ${
+              isSelected
+                ? "shadow-2xs font-bold"
+                : "hover:bg-black/5 dark:hover:bg-white/5"
+            }`}
           >
             {tab.icon}
             <span>{tab.label}</span>
             {tab.badge !== undefined && (
-              <span className="px-1.5 py-0.5 text-xs rounded-full bg-teal-900 text-teal-200 border border-teal-700">
+              <span
+                style={{
+                  backgroundColor: "var(--accent-soft)",
+                  color: "var(--accent)",
+                }}
+                className="px-1.5 py-0.5 text-2xs rounded-full font-bold"
+              >
                 {tab.badge}
               </span>
             )}

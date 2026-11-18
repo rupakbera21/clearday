@@ -9,6 +9,7 @@
 import React, { useState } from "react";
 import { useAppStore } from "@/store/use-app-store";
 import { AskResponse } from "@/schemas/ai";
+import { getKnowledgeItemDisplay } from "@/data/knowledge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -27,13 +28,20 @@ type SupportedLang = "en" | "hi" | "bn" | "ur" | "pa";
 function QuickQuestionsBar({ onSelect }: { onSelect: (q: string) => void }) {
   return (
     <div className="flex items-center gap-2 flex-wrap pt-1">
-      <span className="text-xs text-slate-400 font-medium">Common questions:</span>
+      <span style={{ color: "var(--text-muted)" }} className="text-xs font-medium mr-1 select-none">
+        Common questions:
+      </span>
       {QUICK_QUESTIONS.map((chip) => (
         <button
           key={chip}
           type="button"
           onClick={() => onSelect(chip)}
-          className="px-2.5 py-1 text-xs rounded-full bg-slate-800/80 text-slate-300 border border-slate-700/80 hover:border-slate-600 transition-colors cursor-pointer text-left"
+          style={{
+            backgroundColor: "var(--bg-surface-elevated)",
+            borderColor: "var(--border-subtle)",
+            color: "var(--text-secondary)",
+          }}
+          className="px-3 py-1 text-xs rounded-full border transition-colors cursor-pointer text-left font-medium shadow-2xs hover:bg-black/5 dark:hover:bg-white/5"
         >
           {chip}
         </button>
@@ -47,14 +55,17 @@ function AskAnswerCard({ response, onSpeak }: { response: AskResponse; onSpeak?:
 
   return (
     <div
-      className={`p-5 rounded-2xl border transition-colors space-y-4 ${
-        isEmergency
-          ? "bg-rose-950/80 border-rose-600 text-rose-100"
-          : "bg-slate-800/70 border-slate-700 text-slate-200"
-      }`}
+      style={{
+        backgroundColor: isEmergency ? "var(--bg-aqi-very-poor)" : "var(--bg-surface-elevated)",
+        borderColor: isEmergency ? "var(--color-aqi-very-poor)" : "var(--border-subtle)",
+      }}
+      className="p-5 rounded-2xl border transition-colors space-y-4 shadow-2xs"
     >
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <span className="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+        <span
+          style={{ color: isEmergency ? "var(--color-aqi-very-poor)" : "var(--accent)" }}
+          className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
+        >
           <Icon name={isEmergency ? "alert-triangle" : "shield-check"} size={16} />
           {isEmergency ? "Emergency Notice" : "Clearday Advisory"}
         </span>
@@ -63,7 +74,12 @@ function AskAnswerCard({ response, onSpeak }: { response: AskResponse; onSpeak?:
             <button
               type="button"
               onClick={() => onSpeak(response.answer)}
-              className="text-2xs text-sky-300 hover:text-sky-100 flex items-center gap-1 px-2 py-0.5 rounded bg-slate-700/80 border border-slate-600 cursor-pointer"
+              style={{
+                backgroundColor: "var(--bg-surface)",
+                borderColor: "var(--border-subtle)",
+                color: "var(--text-secondary)",
+              }}
+              className="text-2xs flex items-center gap-1.5 px-2.5 py-1 rounded-md border font-medium cursor-pointer hover:opacity-80 transition-opacity"
               aria-label="Read answer aloud"
             >
               <Icon name="volume" size={13} />
@@ -76,20 +92,32 @@ function AskAnswerCard({ response, onSpeak }: { response: AskResponse; onSpeak?:
         </div>
       </div>
 
-      <p className="text-sm leading-relaxed">{response.answer}</p>
+      <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{response.answer}</p>
 
       {response.citedKnowledgeIds.length > 0 && (
-        <div className="flex items-center gap-2 text-2xs text-slate-400 pt-2 border-t border-slate-700/60 flex-wrap">
+        <div className="flex items-center gap-2 text-2xs pt-2 border-t flex-wrap" style={{ borderColor: "var(--border-subtle)", color: "var(--text-muted)" }}>
           <span>Knowledge References:</span>
-          {response.citedKnowledgeIds.map((id) => (
-            <span key={id} className="px-1.5 py-0.5 rounded-sm bg-slate-900 text-slate-300 border border-slate-700">
-              {id}
-            </span>
-          ))}
+          {response.citedKnowledgeIds.map((id) => {
+            const display = getKnowledgeItemDisplay(id);
+            return (
+              <span
+                key={id}
+                title={id}
+                style={{
+                  backgroundColor: "var(--bg-surface)",
+                  borderColor: "var(--border-subtle)",
+                  color: "var(--text-secondary)",
+                }}
+                className="px-2 py-0.5 rounded-md border font-medium"
+              >
+                {display.title}
+              </span>
+            );
+          })}
         </div>
       )}
 
-      <div className="pt-1 text-2xs text-slate-400 italic">
+      <div className="pt-1 text-2xs italic" style={{ color: "var(--text-muted)" }}>
         {response.safetyNotice}
       </div>
     </div>
@@ -149,18 +177,24 @@ function AskSearchBar({
   );
 }
 
-export function AskView() {
+function speakAnswer(text: string, language: SupportedLang) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = language === "hi" ? "hi-IN" : language === "bn" ? "bn-IN" : "en-US";
+  window.speechSynthesis.speak(utterance);
+}
+
+function useAskApi() {
   const selectedLocation = useAppStore((state) => state.selectedLocation);
   const airSnapshot = useAppStore((state) => state.airSnapshot);
   const profile = useAppStore((state) => state.householdProfile);
 
-  const [question, setQuestion] = useState("");
-  const [language, setLanguage] = useState<SupportedLang>("en");
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<AskResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleAsk = async (textToAsk: string) => {
+  const handleAsk = async (textToAsk: string, language: SupportedLang) => {
     const q = textToAsk.trim();
     if (q.length < 3) return;
 
@@ -190,23 +224,40 @@ export function AskView() {
     }
   };
 
-  const handleSpeak = (text: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === "hi" ? "hi-IN" : language === "bn" ? "bn-IN" : "en-US";
-    window.speechSynthesis.speak(utterance);
-  };
+  return { isLoading, response, error, handleAsk };
+}
+
+export function AskView() {
+  const [question, setQuestion] = useState("");
+  const [language, setLanguage] = useState<SupportedLang>("en");
+  const { isLoading, response, error, handleAsk } = useAskApi();
 
   return (
     <section aria-label="Ask Clearday Q&A" className="space-y-6">
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          Ask Clearday
+        </h1>
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          Grounded air quality explanations, mask fit verification, and smog protection guidance.
+        </p>
+      </div>
+
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-6 rounded-2xl border space-y-5 shadow-2xs"
+      >
         <div>
-          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Icon name="message-square" size={20} className="text-sky-400" />
-            <span>Ask Clearday</span>
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+            <span style={{ color: "var(--accent)" }}>
+              <Icon name="message-square" size={20} />
+            </span>
+            <span>Community & Expert Q&A</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
             Ask practical questions on winter air pollution, household protection, masks, and purifier usage.
           </p>
         </div>
@@ -216,24 +267,24 @@ export function AskView() {
           setQuestion={setQuestion}
           language={language}
           setLanguage={setLanguage}
-          onAsk={() => handleAsk(question)}
+          onAsk={() => handleAsk(question, language)}
           isLoading={isLoading}
         />
 
         <QuickQuestionsBar
           onSelect={(q) => {
             setQuestion(q);
-            void handleAsk(q);
+            void handleAsk(q, language);
           }}
         />
 
         {error && (
-          <p role="alert" className="text-xs text-rose-400 font-medium p-3 rounded-lg bg-rose-950/40 border border-rose-800">
+          <p role="alert" className="text-xs text-rose-600 dark:text-rose-400 font-medium p-3 rounded-lg border" style={{ backgroundColor: "var(--bg-surface-elevated)", borderColor: "var(--border-subtle)" }}>
             {error}
           </p>
         )}
 
-        {response && <AskAnswerCard response={response} onSpeak={handleSpeak} />}
+        {response && <AskAnswerCard response={response} onSpeak={(text) => speakAnswer(text, language)} />}
       </div>
     </section>
   );

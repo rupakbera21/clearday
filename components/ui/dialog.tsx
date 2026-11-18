@@ -18,6 +18,27 @@ export interface DialogProps {
   className?: string;
 }
 
+function useDialogEffects(isOpen: boolean, onClose: () => void) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+}
+
 export function Dialog({
   isOpen,
   onClose,
@@ -31,32 +52,7 @@ export function Dialog({
   const titleId = useId();
   const descId = useId();
 
-  // Handle Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // Lock body scroll
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  useDialogEffects(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -70,15 +66,20 @@ export function Dialog({
     >
       <div
         ref={dialogRef}
-        className={`relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 text-slate-100 space-y-4 max-h-full overflow-y-auto ${className}`}
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+          color: "var(--text-primary)",
+        }}
+        className={`relative w-full max-w-lg rounded-2xl border shadow-2xl p-6 space-y-4 max-h-full overflow-y-auto ${className}`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 id={titleId} className="text-lg font-bold text-slate-100">
+            <h2 id={titleId} className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
               {title}
             </h2>
             {description && (
-              <p id={descId} className="mt-1 text-sm text-slate-400">
+              <p id={descId} className="mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
                 {description}
               </p>
             )}
@@ -94,10 +95,10 @@ export function Dialog({
           </Button>
         </div>
 
-        <div className="py-2 text-sm text-slate-300">{children}</div>
+        <div className="py-2 text-sm" style={{ color: "var(--text-secondary)" }}>{children}</div>
 
         {footer && (
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
             {footer}
           </div>
         )}

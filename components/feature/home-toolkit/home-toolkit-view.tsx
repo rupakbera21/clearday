@@ -79,36 +79,47 @@ function CalculatorResults({
   result: IndoorReductionResult;
   ambientPm25: number;
 }) {
+  const cardStyle: React.CSSProperties = {
+    backgroundColor: "var(--bg-surface-elevated)",
+    borderColor: "var(--border-subtle)",
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-slate-800">
-      <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-1">
-        <span className="text-xs uppercase font-bold text-slate-400">Total Air Changes / Hr</span>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+      <div style={cardStyle} className="p-4 rounded-xl border space-y-1.5 shadow-2xs">
+        <span style={{ color: "var(--text-muted)" }} className="text-xs uppercase font-bold tracking-wider block">
+          Total Air Changes / Hr
+        </span>
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl sm:text-3xl font-extrabold text-slate-100 tabular-nums">
+          <span className="text-2xl sm:text-3xl font-extrabold tabular-nums" style={{ color: "var(--text-primary)" }}>
             {result.totalAch.toFixed(1)}
           </span>
-          <span className="text-xs text-slate-400">ACH</span>
+          <span className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>ACH</span>
         </div>
-        <p className="text-2xs text-slate-400">
+        <p className="text-2xs" style={{ color: "var(--text-muted)" }}>
           Clean air: {result.cleanAirAch.toFixed(1)} ACH | Natural: {result.naturalAch.toFixed(1)} ACH
         </p>
       </div>
 
-      <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-1">
-        <span className="text-xs uppercase font-bold text-sky-400">Indoor PM2.5 Reduction</span>
+      <div style={cardStyle} className="p-4 rounded-xl border space-y-1.5 shadow-2xs">
+        <span style={{ color: "var(--accent)" }} className="text-xs uppercase font-bold tracking-wider block">
+          Indoor PM2.5 Reduction
+        </span>
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl sm:text-3xl font-extrabold text-slate-100 tabular-nums">
+          <span className="text-2xl sm:text-3xl font-extrabold tabular-nums" style={{ color: "var(--text-primary)" }}>
             {result.reductionPercentage}%
           </span>
-          <span className="text-xs text-sky-400 font-semibold">Drop</span>
+          <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>Drop</span>
         </div>
-        <p className="text-2xs text-slate-400">
-          Estimated indoor PM2.5: ~{result.estimatedIndoorPm25.central} ug/m3 (from {ambientPm25} ug/m3 ambient)
+        <p className="text-2xs" style={{ color: "var(--text-muted)" }}>
+          Estimated indoor PM2.5: ~{result.estimatedIndoorPm25.central} µg/m³ (from {ambientPm25} µg/m³ ambient)
         </p>
       </div>
 
-      <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-1">
-        <span className="text-xs uppercase font-bold text-slate-400">Purifier Sizing Status</span>
+      <div style={cardStyle} className="p-4 rounded-xl border space-y-1.5 shadow-2xs">
+        <span style={{ color: "var(--text-muted)" }} className="text-xs uppercase font-bold tracking-wider block">
+          Purifier Sizing Status
+        </span>
         <div className="pt-1">
           {result.isAdequatelySized ? (
             <Badge variant="success" showShape={false}>Adequately Sized ({result.cleanAirAch.toFixed(1)} ACH &gt;= 4)</Badge>
@@ -116,7 +127,7 @@ function CalculatorResults({
             <Badge variant="warning" showShape={false}>Undersized (Target: {result.recommendedCadrM3H} m³/h)</Badge>
           )}
         </div>
-        <p className="text-2xs text-slate-400 pt-1">
+        <p className="text-2xs pt-1" style={{ color: "var(--text-muted)" }}>
           Recommended minimum CADR: {result.recommendedCadrM3H} m³/h for this room volume.
         </p>
       </div>
@@ -126,17 +137,38 @@ function CalculatorResults({
 
 function MythFactPanel({ items }: { items: KnowledgeItem[] }) {
   return (
-    <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+    <div
+      style={{
+        backgroundColor: "var(--bg-surface)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className="p-6 rounded-2xl border space-y-4 shadow-2xs"
+    >
       <div>
-        <h3 className="text-lg font-bold text-slate-100">Indoor Air Hacks: Myth vs Fact</h3>
-        <p className="text-xs text-slate-400 mt-0.5">Evidence-based facts vetted by environmental health research.</p>
+        <h3 className="text-lg font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          Indoor Air Hacks: Myth vs Fact
+        </h3>
+        <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+          Evidence-based facts vetted by environmental health research and aerosol science.
+        </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {items.map((item) => (
-          <div key={item.id} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2">
-            <span className="text-xs font-bold text-sky-400">{item.title}</span>
-            <p className="text-xs text-slate-300 leading-relaxed">{item.guidance}</p>
-            <div className="pt-1 text-2xs text-slate-500">
+          <div
+            key={item.id}
+            style={{
+              backgroundColor: "var(--bg-surface-elevated)",
+              borderColor: "var(--border-subtle)",
+            }}
+            className="p-4 rounded-xl border space-y-2 shadow-2xs"
+          >
+            <span className="text-xs font-bold block" style={{ color: "var(--accent)" }}>
+              {item.title}
+            </span>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              {item.guidance}
+            </p>
+            <div className="pt-1 text-2xs" style={{ color: "var(--text-muted)" }}>
               <span>Evidence: {item.evidenceStrength} | Source: {item.sourceOrg}</span>
             </div>
           </div>
@@ -174,14 +206,31 @@ export function HomeToolkitView() {
 
   return (
     <section aria-label="Home Air Quality Toolkit" className="space-y-6">
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          Home Toolkit
+        </h1>
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+          Purifier CADR sizing, DIY box fan airflow calculator, and indoor air myth vs fact guide.
+        </p>
+      </div>
+
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="p-6 rounded-2xl border space-y-6 shadow-2xs"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-              <Icon name="filter" size={20} className="text-sky-400" />
+            <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+              <span style={{ color: "var(--accent)" }}>
+                <Icon name="filter" size={20} />
+              </span>
               <span>Purifier & DIY Box Fan Sizing Calculator</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
               Physics-based single-compartment mass balance estimating indoor PM2.5 reduction and air changes per hour (ACH).
             </p>
           </div>

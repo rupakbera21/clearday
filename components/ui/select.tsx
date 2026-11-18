@@ -1,7 +1,6 @@
 /**
  * @file select.tsx
- * @description Accessible select input with custom chevron and 44px min height.
- * Addresses problem-statement: Accessibility, Touch targets >= 44x44.
+ * @description Accessible select input with semantic variables and custom chevron.
  */
 
 import React, { forwardRef, useId } from "react";
@@ -37,17 +36,16 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const selectId = externalId || generatedId;
   const errorId = `${selectId}-error`;
   const helperId = `${selectId}-helper`;
-
-  const ariaDescribedBy = errorMessage
-    ? errorId
-    : helperText
-      ? helperId
-      : undefined;
+  const ariaDescribedBy = errorMessage ? errorId : helperText ? helperId : undefined;
 
   return (
     <div className="w-full space-y-1.5">
       {label && (
-        <label htmlFor={selectId} className="block text-sm font-medium text-slate-200 select-none">
+        <label
+          htmlFor={selectId}
+          style={{ color: "var(--text-primary)" }}
+          className="block text-xs font-semibold select-none"
+        >
           {label}
         </label>
       )}
@@ -59,31 +57,32 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           disabled={disabled}
           aria-invalid={Boolean(errorMessage)}
           aria-describedby={ariaDescribedBy}
-          className={`w-full min-h-11 pl-3.5 pr-10 py-2 text-sm rounded-lg bg-slate-900 border text-slate-100 appearance-none cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
-            errorMessage
-              ? "border-rose-500 focus-visible:ring-rose-500"
-              : "border-slate-700 hover:border-slate-600 focus:border-sky-500"
-          } ${className}`}
+          style={{
+            backgroundColor: "var(--bg-surface)",
+            borderColor: errorMessage ? "var(--color-aqi-very-poor)" : "var(--border-default)",
+            color: "var(--text-primary)",
+          }}
+          className={`w-full h-11 pl-3.5 pr-10 text-sm rounded-lg border shadow-2xs appearance-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-hidden focus:ring-2 cursor-pointer ${className}`}
           {...props}
         >
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value} disabled={opt.disabled} className="bg-slate-900 text-slate-100">
+            <option key={opt.value} value={opt.value} disabled={opt.disabled}>
               {opt.label}
             </option>
           ))}
         </select>
 
-        <div className="absolute right-3 pointer-events-none text-slate-400">
-          <Icon name="chevron-down" size={16} />
+        <div className="absolute right-3 flex items-center pointer-events-none opacity-60">
+          <Icon name="chevron-down" size={16} aria-hidden="true" />
         </div>
       </div>
 
       {errorMessage ? (
-        <p id={errorId} role="alert" className="text-xs text-rose-400 font-medium">
+        <p id={errorId} role="alert" className="text-xs text-rose-600 dark:text-rose-400 font-medium">
           {errorMessage}
         </p>
       ) : helperText ? (
-        <p id={helperId} className="text-xs text-slate-400">
+        <p id={helperId} style={{ color: "var(--text-muted)" }} className="text-xs">
           {helperText}
         </p>
       ) : null}

@@ -46,7 +46,7 @@ export function ThemeSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Visual and standard preferences">
+    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label="Visual and standard preferences">
       <Button
         variant="outline"
         size="sm"

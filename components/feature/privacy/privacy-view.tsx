@@ -8,18 +8,46 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Icon, IconName } from "@/components/ui/icon";
 
+function PrivacyPillar({
+  icon,
+  title,
+  desc,
+}: {
+  icon: IconName;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div
+      style={{
+        backgroundColor: "var(--bg-surface-elevated)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className="rounded-lg border p-3.5 space-y-1.5"
+    >
+      <div className="flex items-center gap-2 font-medium text-xs" style={{ color: "var(--text-primary)" }}>
+        <Icon name={icon} size={15} style={{ color: "var(--accent)" }} />
+        <span>{title}</span>
+      </div>
+      <p className="text-xs leading-normal" style={{ color: "var(--text-secondary)" }}>{desc}</p>
+    </div>
+  );
+}
+
 function PrivacyPillarsSection() {
   return (
     <Surface elevation="card" className="space-y-4">
-      <div className="flex items-center gap-2 text-emerald-400">
-        <Icon name="shield-check" size={24} />
-        <h2 className="text-lg font-semibold text-slate-100">Privacy-First Architecture</h2>
+      <div className="flex items-center gap-2.5">
+        <Icon name="shield-check" size={22} style={{ color: "var(--accent)" }} />
+        <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
+          Privacy-First Architecture
+        </h2>
       </div>
-      <p className="text-sm text-slate-300 leading-relaxed">
+      <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
         Clearday is engineered with strict Privacy by Design principles. We believe health and household routines in smog season are deeply personal.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         <PrivacyPillar
           icon="lock"
           title="Zero Server Database"
@@ -65,28 +93,36 @@ function StorageInspectorSection({
     <Surface elevation="card" className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon name="info" size={20} className="text-sky-400" />
-          <h3 className="font-semibold text-slate-100">Local Data Footprint</h3>
+          <Icon name="info" size={18} style={{ color: "var(--accent)" }} />
+          <h3 className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>
+            Local Data Footprint
+          </h3>
         </div>
         <Badge variant="outline">{storageBytes} bytes</Badge>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950 p-4 space-y-2 text-xs text-slate-400">
+      <div
+        style={{
+          backgroundColor: "var(--bg-surface-subtle)",
+          borderColor: "var(--border-subtle)",
+        }}
+        className="rounded-lg border p-4 space-y-2 text-xs"
+      >
         <div className="flex justify-between">
-          <span>Stored Location:</span>
-          <span className="font-medium text-slate-200">
+          <span style={{ color: "var(--text-secondary)" }}>Stored Location:</span>
+          <span className="font-medium" style={{ color: "var(--text-primary)" }}>
             {selectedLocation?.name ?? "None"} ({selectedLocation?.country ?? "N/A"})
           </span>
         </div>
         <div className="flex justify-between">
-          <span>Household Members:</span>
-          <span className="font-medium text-slate-200">
+          <span style={{ color: "var(--text-secondary)" }}>Household Members:</span>
+          <span className="font-medium" style={{ color: "var(--text-primary)" }}>
             {householdProfile?.members?.length ?? 0} members recorded
           </span>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3 pt-1">
         <Button variant="secondary" onClick={onExport}>
           <Icon name="download" size={16} />
           Export My Data (JSON)
@@ -96,12 +132,34 @@ function StorageInspectorSection({
           Wipe All Local Data
         </Button>
         {clearedToast && (
-          <span className="text-xs text-emerald-400 font-medium">
+          <span className="text-xs font-medium" style={{ color: "var(--color-aqi-good)" }}>
             Local storage successfully wiped!
           </span>
         )}
       </div>
     </Surface>
+  );
+}
+
+function PreferenceRow({
+  title,
+  desc,
+  checked,
+  onChange,
+}: {
+  title: string;
+  desc: string;
+  checked: boolean;
+  onChange: (val: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between pt-3 first:pt-0">
+      <div className="space-y-0.5 pr-4">
+        <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{title}</span>
+        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{desc}</p>
+      </div>
+      <Switch checked={checked} onChange={onChange} label={title} />
+    </div>
   );
 }
 
@@ -115,11 +173,13 @@ function PreferencesSection() {
 
   return (
     <Surface elevation="card" className="space-y-4">
-      <div className="flex items-center gap-2 text-sky-400">
-        <Icon name="activity" size={20} />
-        <h3 className="font-semibold text-slate-100">Preferences & Low-Bandwidth</h3>
+      <div className="flex items-center gap-2">
+        <Icon name="activity" size={18} style={{ color: "var(--accent)" }} />
+        <h3 className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>
+          Preferences & Low-Bandwidth
+        </h3>
       </div>
-      <div className="space-y-4 divide-y divide-slate-800/60 pt-2">
+      <div className="space-y-4 pt-1">
         <PreferenceRow
           title="Low-Data Mode"
           desc="Disables non-critical API polling and pre-fetches to conserve mobile data."
@@ -178,6 +238,15 @@ export function PrivacyView() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          Privacy & Data
+        </h1>
+        <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
+          Local storage inspector, privacy architecture, and bandwidth controls.
+        </p>
+      </div>
+
       <PrivacyPillarsSection />
       <StorageInspectorSection
         storageBytes={storageBytes}
@@ -186,48 +255,6 @@ export function PrivacyView() {
         onClear={handleClearData}
       />
       <PreferencesSection />
-    </div>
-  );
-}
-
-function PrivacyPillar({
-  icon,
-  title,
-  desc,
-}: {
-  icon: IconName;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="rounded-lg border border-slate-800/80 bg-slate-900/60 p-3 space-y-1">
-      <div className="flex items-center gap-1.5 text-slate-200 font-medium text-xs">
-        <Icon name={icon} size={14} className="text-emerald-400" />
-        <span>{title}</span>
-      </div>
-      <p className="text-xs text-slate-400 leading-normal">{desc}</p>
-    </div>
-  );
-}
-
-function PreferenceRow({
-  title,
-  desc,
-  checked,
-  onChange,
-}: {
-  title: string;
-  desc: string;
-  checked: boolean;
-  onChange: (val: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between pt-3 first:pt-0">
-      <div className="space-y-0.5 pr-4">
-        <span className="text-sm font-medium text-slate-200">{title}</span>
-        <p className="text-xs text-slate-400">{desc}</p>
-      </div>
-      <Switch checked={checked} onChange={onChange} label={title} />
     </div>
   );
 }
