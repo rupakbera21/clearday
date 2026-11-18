@@ -3,7 +3,7 @@ import { env } from "../env";
 describe("env service", () => {
   it("provides valid environment defaults", () => {
     expect(env).toBeDefined();
-    expect(env.GEMINI_MODEL).toBe("gemini-2.5-flash");
+    expect(env.GEMINI_MODEL).toBe("gemini-3.8-flash");
     expect(env.GROQ_MODEL).toBe("qwen/qwen3.8-27b");
     expect(typeof env.GEMINI_API_KEY).toBe("string");
     expect(typeof env.GROQ_API_KEY).toBe("string");

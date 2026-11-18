@@ -5,6 +5,21 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-18
+
+### Added
+- Complete Phase 4 AI layer with resilient multi-provider ladder: Gemini primary (`gemini-3.8-flash`), Groq secondary (`qwen/qwen3.8-27b`), and deterministic rule-based fallback.
+- Output cleaner in `services/ai/cleaner.ts` stripping `<think>` tags, markdown code blocks, and sanitizing user prompt text.
+- Grounded-numbers validator in `services/ai/validator.ts` strictly ensuring every numeral in AI narrative maps to a verified computed fact ID.
+- Upstash Redis circuit breaker with local in-memory fallback in `services/ai/circuit-breaker.ts` (60s cooldown on exhaustion/auth failure).
+- Central AI orchestrator in `services/ai/orchestrator.ts` handling retries, circuit breaking, schema validation, and canonical response caching.
+- Four bounded API route handlers with rate limiting, Zod schema validation, and rule-based safety fallback:
+  - `POST /api/ai/parse-household`: Parses natural language household descriptions into validated profiles.
+  - `POST /api/ai/tailor-plan`: Synthesizes routine plans tailored to outdoor exposure windows and vulnerable members.
+  - `POST /api/ai/explain-impact`: Explains personal exposure and emissions differences using verified computational facts.
+  - `POST /api/ai/ask`: Grounded safety-constrained Q&A with immediate emergency symptom interception.
+- Complete unit and integration test suite across 31 test suites (110 tests) with 85%+ coverage on services and app/api.
+
 ## [0.3.0] - 2026-11-18
 
 ### Added

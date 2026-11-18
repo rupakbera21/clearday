@@ -5,6 +5,7 @@ const config = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
     "^uncrypto$": "<rootDir>/tests/mocks/uncrypto.cjs",
+    "^@google/genai$": "<rootDir>/node_modules/@google/genai/dist/node/index.cjs",
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/", "<rootDir>/tests/"],

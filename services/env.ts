@@ -11,7 +11,7 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().optional().default(""),
   UPSTASH_REDIS_REST_URL: z.string().url().optional().or(z.literal("")),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional().default(""),
-  GEMINI_MODEL: z.string().optional().default("gemini-2.5-flash"),
+  GEMINI_MODEL: z.string().optional().default("gemini-3.8-flash"),
   GROQ_MODEL: z.string().optional().default("qwen/qwen3.8-27b"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
@@ -37,7 +37,7 @@ function parseEnv() {
     GROQ_API_KEY: stripQuotes(process.env.GROQ_API_KEY),
     UPSTASH_REDIS_REST_URL: stripQuotes(process.env.UPSTASH_REDIS_REST_URL),
     UPSTASH_REDIS_REST_TOKEN: stripQuotes(process.env.UPSTASH_REDIS_REST_TOKEN),
-    GEMINI_MODEL: stripQuotes(process.env.GEMINI_MODEL) || "gemini-2.5-flash",
+    GEMINI_MODEL: stripQuotes(process.env.GEMINI_MODEL) || "gemini-3.8-flash",
     GROQ_MODEL: stripQuotes(process.env.GROQ_MODEL) || "qwen/qwen3.8-27b",
     NODE_ENV: process.env.NODE_ENV || "development",
   };
