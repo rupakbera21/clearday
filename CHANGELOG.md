@@ -5,6 +5,15 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-11-18
+
+### Added
+- Complete Phase 2 mathematical domain engines: AQI (`domain/aqi.ts`), Risk (`domain/risk.ts`), Windows (`domain/windows.ts`), Exposure (`domain/exposure.ts`), Indoor mass-balance (`domain/indoor.ts`), Alternatives (`domain/alternatives.ts`), Stagnation heuristics (`domain/stagnation.ts`).
+- Empirical parameter datasets in `data/parameters.ts` and `data/emission-factors.ts` with complete uncertainty ranges and peer-reviewed citations.
+- Vetted knowledge base in `data/knowledge/` with 32 structured guidance items and deterministic selection function.
+- Exhaustive property tests with `fast-check` proving monotonicity and interval bounds across all engines.
+- Detailed parameter and breakpoint documentation in `docs/ASSUMPTIONS.md` and `docs/DATA_SOURCES.md`.
+
 ## [0.1.0] - 2026-11-18
 
 ### Added
