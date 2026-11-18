@@ -29,6 +29,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# fresh clone test
+/_fresh_clone_test
+
 # playwright
 /test-results/
 /playwright-report/

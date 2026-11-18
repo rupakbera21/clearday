@@ -16,6 +16,7 @@ const config = {
     "services/**/*.ts",
     "app/api/**/*.ts",
     "schemas/**/*.ts",
+    "data/**/*.ts",
     "!**/*.d.ts",
     "!**/node_modules/**",
   ],
