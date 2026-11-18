@@ -5,6 +5,16 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-18
+
+### Added
+- Complete Phase 3 data services: Open-Meteo Air Quality & Weather client in `services/air/client.ts`.
+- Geocoding client with city search and caching in `services/geo/client.ts`.
+- Bounded LRU cache with TTL, in-flight request coalescing, and stale-fallback in `services/air/cache.ts`.
+- REST endpoints: `GET /api/geo/search`, `GET /api/air/snapshot`, and `POST /api/air/manual`.
+- Data failure ladder: fresh live fetch -> coalesced in-flight -> stale cache -> manual entry fallback.
+- Recorded realistic test fixtures in `tests/fixtures/` and 21 new integration tests with failure injection.
+
 ## [0.2.0] - 2026-11-18
 
 ### Added

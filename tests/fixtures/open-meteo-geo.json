@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "id": 1273294,
+      "name": "Delhi",
+      "latitude": 28.65195,
+      "longitude": 77.23149,
+      "elevation": 216.0,
+      "feature_code": "PPLA",
+      "country_code": "IN",
+      "admin1_id": 1273293,
+      "timezone": "Asia/Kolkata",
+      "population": 9840000,
+      "country": "India",
+      "admin1": "Delhi"
+    },
+    {
+      "id": 1269320,
+      "name": "Kolkata",
+      "latitude": 22.56263,
+      "longitude": 88.36304,
+      "elevation": 9.0,
+      "feature_code": "PPLA",
+      "country_code": "IN",
+      "admin1_id": 1252881,
+      "timezone": "Asia/Kolkata",
+      "population": 4631392,
+      "country": "India",
+      "admin1": "West Bengal"
+    }
+  ],
+  "generationtime_ms": 0.55
+}
