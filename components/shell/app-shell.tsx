@@ -14,6 +14,7 @@ import { useAppStore } from "@/store/use-app-store";
 import { DesktopSidebar } from "./desktop-sidebar";
 import { MobileNav } from "./mobile-nav";
 import { ScreenOutlet } from "./screen-outlet";
+import { SplashLoader } from "./splash-loader";
 import { AqiCategory } from "@/domain/aqi";
 
 function DesktopTopBar({
@@ -70,6 +71,7 @@ export function AppShell() {
       style={{ backgroundColor: "var(--bg-canvas)", color: "var(--text-primary)" }}
       className="min-h-screen flex flex-col lg:flex-row antialiased"
     >
+      <SplashLoader />
       <DesktopSidebar activeTab={activeTab} onSelect={setActiveTab} />
 
       <MobileNav
