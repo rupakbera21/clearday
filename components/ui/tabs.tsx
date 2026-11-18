@@ -75,11 +75,10 @@ export function Tabs({
             tabIndex={isSelected ? 0 : -1}
             onClick={() => onChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
-            className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors min-h-11 cursor-pointer select-none ${
-              isSelected
-                ? "bg-slate-800 text-sky-400 shadow-sm border border-slate-700"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-            }`}
+            className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors min-h-11 cursor-pointer select-none ${isSelected
+              ? "bg-slate-800 text-sky-400 shadow-sm border border-slate-700"
+              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+              }`}
           >
             {tab.icon}
             <span>{tab.label}</span>

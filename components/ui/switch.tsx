@@ -63,14 +63,12 @@ export function Switch({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         onKeyDown={handleKeyDown}
-        className={`relative inline-flex items-center h-7 w-12 shrink-0 rounded-full cursor-pointer transition-colors p-1 disabled:opacity-50 disabled:cursor-not-allowed touch-target ${
-          checked ? "bg-sky-600" : "bg-slate-700 hover:bg-slate-600"
-        }`}
+        className={`relative inline-flex items-center h-7 w-12 shrink-0 rounded-full cursor-pointer transition-colors p-1 disabled:opacity-50 disabled:cursor-not-allowed touch-target ${checked ? "bg-sky-600" : "bg-slate-700 hover:bg-slate-600"
+          }`}
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0"
-          }`}
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${checked ? "translate-x-5" : "translate-x-0"
+            }`}
         />
       </button>
     </div>
