@@ -2,22 +2,23 @@
 
 @layer base {
   :root {
-    --bg-canvas: #021a1a;
-    --bg-surface: #062b2b;
-    --bg-surface-elevated: #0d3d3d;
-    --bg-surface-subtle: #062b2b80;
-    --border-subtle: #0d3d3d;
-    --border-default: #134e4a;
-    --border-strong: #14b8a6;
-    --text-primary: #f0fdfa;
+    /* Clearday Dark Theme (Aligned with Sunrise Clean-Air Palette) */
+    --bg-canvas: #041414;
+    --bg-surface: #082222;
+    --bg-surface-elevated: #0e3030;
+    --bg-surface-subtle: #061c1c;
+    --border-subtle: #113838;
+    --border-default: #174848;
+    --border-strong: #1d5c5c;
+    --text-primary: #f0fdf4;
     --text-secondary: #99f6e4;
     --text-muted: #5eead4;
     --ring-focus: #f97316;
 
-    /* Primary Sunrise Brand Accent */
+    /* Primary Sunrise Brand Accents */
     --brand-sunrise: #f97316;
     --brand-sunrise-glow: #ea580c;
-    --brand-teal-deep: #003c3c;
+    --brand-teal-deep: #021a1a;
     --brand-teal-light: #14b8a6;
 
     /* AQI semantic text tokens */
@@ -40,12 +41,13 @@
   }
 
   [data-theme="light"] {
-    --bg-canvas: #f0fdfa;
+    /* Clearday Light Theme (Crisp Clean-Air Mint & Crisp Surfaces) */
+    --bg-canvas: #f0fdf9;
     --bg-surface: #ffffff;
-    --bg-surface-elevated: #ccfbf1;
-    --bg-surface-subtle: #f0fdfa;
-    --border-subtle: #99f6e4;
-    --border-default: #5eead4;
+    --bg-surface-elevated: #e6f9f4;
+    --bg-surface-subtle: #f4fbf8;
+    --border-subtle: #ccfbf1;
+    --border-default: #99f6e4;
     --border-strong: #0d9488;
     --text-primary: #042f2e;
     --text-secondary: #115e59;
@@ -76,9 +78,9 @@
 
   [data-contrast="high"] {
     --bg-canvas: #000000;
-    --bg-surface: #121212;
-    --bg-surface-elevated: #1a1a1a;
-    --bg-surface-subtle: #121212;
+    --bg-surface: #0a0a0a;
+    --bg-surface-elevated: #171717;
+    --bg-surface-subtle: #0a0a0a;
     --border-subtle: #ffffff;
     --border-default: #ffffff;
     --border-strong: #ffffff;
@@ -113,6 +115,48 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", "Noto Sans Bengali", "Noto Sans Gurmukhi", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dynamic theme overrides to make light mode and dark mode visually propagate to all standard utility blocks */
+[data-theme="light"] .bg-slate-950,
+[data-theme="light"] .bg-slate-900 {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .bg-slate-800,
+[data-theme="light"] .bg-slate-800\/60,
+[data-theme="light"] .bg-slate-800\/70,
+[data-theme="light"] .bg-slate-800\/80,
+[data-theme="light"] .bg-slate-800\/90 {
+  background-color: var(--bg-surface-elevated) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .border-slate-800,
+[data-theme="light"] .border-slate-700,
+[data-theme="light"] .border-slate-700\/60,
+[data-theme="light"] .border-slate-700\/80 {
+  border-color: var(--border-default) !important;
+}
+
+[data-theme="light"] .text-slate-100,
+[data-theme="light"] .text-slate-200 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .text-slate-300,
+[data-theme="light"] .text-slate-400 {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .text-sky-400,
+[data-theme="light"] .text-sky-300 {
+  color: #0d9488 !important;
+}
+
+[data-theme="light"] .bg-sky-600 {
+  background-color: #0d9488 !important;
 }
 
 .tabular-nums {

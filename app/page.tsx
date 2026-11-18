@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Tabs, TabItem } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
+import { Icon } from "@/components/ui/icon";
 import { ThemeSwitcher } from "@/components/feature/theme-switcher";
 import { useAppStore } from "@/store/use-app-store";
 
@@ -20,15 +21,15 @@ import { CommunityView } from "@/components/feature/community/community-view";
 import { PrivacyView } from "@/components/feature/privacy/privacy-view";
 
 const NAVIGATION_TABS: TabItem[] = [
-  { id: "snapshot", label: "Air Snapshot" },
-  { id: "plan", label: "Today's Plan" },
-  { id: "community", label: "Community" },
-  { id: "impact", label: "Impact Lab" },
-  { id: "hacks", label: "Home Toolkit" },
-  { id: "alternatives", label: "Alternatives" },
-  { id: "household", label: "Household" },
-  { id: "ask", label: "Ask Clearday" },
-  { id: "privacy", label: "Privacy & Data" },
+  { id: "snapshot", label: "Air Snapshot", icon: <Icon name="fog" size={16} /> },
+  { id: "plan", label: "Today's Plan", icon: <Icon name="clock" size={16} /> },
+  { id: "community", label: "Community", icon: <Icon name="community" size={16} /> },
+  { id: "impact", label: "Impact Lab", icon: <Icon name="sparkles" size={16} /> },
+  { id: "hacks", label: "Home Toolkit", icon: <Icon name="home" size={16} /> },
+  { id: "alternatives", label: "Alternatives", icon: <Icon name="leaf" size={16} /> },
+  { id: "household", label: "Household", icon: <Icon name="users" size={16} /> },
+  { id: "ask", label: "Ask Clearday", icon: <Icon name="message-square" size={16} /> },
+  { id: "privacy", label: "Privacy & Data", icon: <Icon name="lock" size={16} /> },
 ];
 
 const SCREEN_COMPONENTS: Record<string, React.ReactNode> = {
@@ -61,10 +62,10 @@ export default function HomePage() {
               <Image
                 src="/logo.png"
                 alt="Clearday"
-                width={160}
-                height={64}
+                width={200}
+                height={80}
                 priority
-                className="h-16 w-auto object-contain drop-shadow-md"
+                className="h-20 w-auto object-contain filter drop-shadow-lg"
               />
             </div>
           }

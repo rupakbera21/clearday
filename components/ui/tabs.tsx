@@ -57,7 +57,7 @@ export function Tabs({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={`flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto no-scrollbar ${className}`}
+      className={`flex items-center gap-1.5 p-1.5 bg-emerald-950/60 border border-teal-900/60 rounded-2xl overflow-x-auto no-scrollbar shadow-inner ${className}`}
     >
       {tabs.map((tab, idx) => {
         const isSelected = tab.id === activeTab;
@@ -75,15 +75,15 @@ export function Tabs({
             tabIndex={isSelected ? 0 : -1}
             onClick={() => onChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
-            className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors min-h-11 cursor-pointer select-none ${isSelected
-              ? "bg-slate-800 text-sky-400 shadow-sm border border-slate-700"
-              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+            className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl whitespace-nowrap transition-all min-h-11 cursor-pointer select-none ${isSelected
+              ? "bg-teal-700 text-amber-300 shadow-md border border-teal-500/50"
+              : "text-teal-200/70 hover:text-teal-100 hover:bg-teal-900/40"
               }`}
           >
             {tab.icon}
             <span>{tab.label}</span>
             {tab.badge !== undefined && (
-              <span className="px-1.5 py-0.5 text-xs rounded-full bg-slate-700 text-slate-300">
+              <span className="px-1.5 py-0.5 text-xs rounded-full bg-teal-900 text-teal-200 border border-teal-700">
                 {tab.badge}
               </span>
             )}
