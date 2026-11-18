@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Clearday - Air Quality & Winter Smog Assistant",
   description:
     "Grounded guidance, daily routines, and indoor air hacks for families navigating winter smog.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -24,7 +29,16 @@ export default function RootLayout({
         <div className="flex min-h-screen flex-col">
           <header className="border-b border-slate-800 bg-slate-950/80 px-4 py-3">
             <div className="mx-auto flex max-w-5xl items-center justify-between">
-              <span className="text-xl font-bold tracking-tight text-amber-400">Clearday</span>
+              <div className="flex items-center gap-2.5">
+                <Image
+                  src="/logo.png"
+                  alt="Clearday Logo"
+                  width={28}
+                  height={28}
+                  className="rounded-lg object-contain"
+                />
+                <span className="text-xl font-bold tracking-tight text-amber-400">Clearday</span>
+              </div>
               <span className="text-xs text-slate-400">Urban Smog & Health Assistant</span>
             </div>
           </header>

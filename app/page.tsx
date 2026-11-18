@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Tabs, TabItem } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,16 @@ export default function HomePage() {
         <PageHeader
           title="Clearday"
           subtitle="GenAI assistant for families navigating severe winter smog and urban air pollution."
+          logo={
+            <Image
+              src="/logo.png"
+              alt="Clearday Clean Air Logo"
+              width={48}
+              height={48}
+              priority
+              className="rounded-xl shadow-md border border-slate-700/60 bg-slate-900 object-contain p-1"
+            />
+          }
           badge={
             <Badge variant="aqi" aqiCategory={aqiCategory}>
               {locationLabel}
