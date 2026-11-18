@@ -5,6 +5,18 @@ All notable changes to Clearday will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-18
+
+### Added
+- Phase 7 Review Gate, Traceability, Concurrency, and Accessibility Hardening:
+  - Requirement Traceability Matrix in `README.md` mapping every phrase of problem statement to implementation files and tests.
+  - Concurrency slot acquisition (max 8 concurrent upstream calls) and in-flight promise coalescing in `AIOrchestrator` (`services/ai/orchestrator.ts`).
+  - Unit tests verifying 50 concurrent identical requests coalesce to 1 upstream call, in-flight map drains to 0, peak concurrency <= 8, cache bounded <= 80, and memory delta < 20MB (`services/ai/__tests__/concurrency.test.ts`).
+  - Zustand store resilience and corruption recovery test suite in `store/__tests__/use-app-store.test.ts`.
+  - Comprehensive WCAG 2.2 AA accessibility test suite via `jest-axe` in `components/feature/__tests__/axe.test.tsx` verifying zero automated accessibility violations across all feature screens.
+  - Automated documentation path existence validation script (`scripts/check-docs.mjs`).
+  - Fresh-clone verification test passing in isolated temporary directory.
+
 ## [0.6.0] - 2026-11-18
 
 ### Added

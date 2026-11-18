@@ -58,6 +58,7 @@ export function Switch({
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label}
         aria-describedby={description ? descId : undefined}
         disabled={disabled}
         onClick={() => onChange(!checked)}

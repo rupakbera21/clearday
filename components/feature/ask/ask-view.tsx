@@ -111,6 +111,7 @@ function AskSearchBar({
 
       <div className="flex gap-2">
         <Select
+          aria-label="Response language"
           value={language}
           onChange={(e) => setLanguage(e.target.value as SupportedLang)}
           options={[

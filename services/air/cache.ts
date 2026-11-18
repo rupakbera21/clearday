@@ -73,10 +73,10 @@ export class BoundedLruCache<T> {
   /**
    * Coalesces simultaneous identical in-flight promises to eliminate duplicate upstream calls.
    */
-  public async coalesce(key: string, fetcher: () => Promise<T>, ttlMs?: number): Promise<{ value: T; isStale: boolean; source: "fresh" | "coalesced" | "stale_cache" }> {
+  public async coalesce(key: string, fetcher: () => Promise<T>, ttlMs?: number): Promise<{ value: T; isStale: boolean; source: "fresh" | "cache" | "coalesced" | "stale_cache" }> {
     const existing = this.get(key);
     if (existing && !existing.isStale) {
-      return { value: existing.value, isStale: false, source: "fresh" };
+      return { value: existing.value, isStale: false, source: "cache" };
     }
 
     // In-flight coalescing

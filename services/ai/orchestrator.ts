@@ -1,7 +1,7 @@
 /**
  * @file orchestrator.ts
- * @description Central AI Orchestrator managing multi-provider fallback, circuit breaking, schema repair, and grounded validation.
- * Addresses problem-statement: GenAI-powered assistant, Multi-provider fallback, Grounded-numbers rule.
+ * @description Central AI Orchestrator managing multi-provider fallback, circuit breaking, schema repair, concurrency capping, and grounded validation.
+ * Addresses problem-statement: GenAI-powered assistant, Multi-provider fallback, Grounded-numbers rule, Efficiency (concurrency bounds).
  */
 
 import { z } from "zod";
@@ -36,14 +36,51 @@ export interface OrchestratorOptions<T> {
   cacheKeyData?: unknown;
 }
 
+const MAX_CONCURRENT_CALLS = 8;
+
 export class AIOrchestrator {
   private gemini: LLMProvider;
   private groq: LLMProvider;
-  private responseCache = new BoundedLruCache<unknown>(80, 30 * 60 * 1000); // 30 min cache
+  private responseCache = new BoundedLruCache<unknown>(80, 30 * 60 * 1000);
+  private activeConcurrency = 0;
+  private waitQueue: Array<() => void> = [];
 
   constructor(gemini?: LLMProvider, groq?: LLMProvider) {
     this.gemini = gemini ?? new GeminiProvider();
     this.groq = groq ?? new GroqProvider();
+  }
+
+  public getActiveConcurrency(): number {
+    return this.activeConcurrency;
+  }
+
+  public getInFlightCount(): number {
+    return this.responseCache.inFlightCount();
+  }
+
+  public getCacheSize(): number {
+    return this.responseCache.size();
+  }
+
+  public clearCache(): void {
+    this.responseCache.clear();
+  }
+
+  private async acquireSlot(): Promise<void> {
+    if (this.activeConcurrency < MAX_CONCURRENT_CALLS) {
+      this.activeConcurrency++;
+      return;
+    }
+    await new Promise<void>((resolve) => {
+      this.waitQueue.push(resolve);
+    });
+    this.activeConcurrency++;
+  }
+
+  private releaseSlot(): void {
+    this.activeConcurrency = Math.max(0, this.activeConcurrency - 1);
+    const next = this.waitQueue.shift();
+    if (next) next();
   }
 
   private async callProviderWithRetry(
@@ -57,7 +94,7 @@ export class AIOrchestrator {
     }
 
     let attempts = 0;
-    const maxAttempts = 2; // Retry transient errors up to 2 times
+    const maxAttempts = 2;
 
     while (attempts < maxAttempts) {
       attempts++;
@@ -71,7 +108,6 @@ export class AIOrchestrator {
           await recordProviderFailure(provider.name, pErr.isImmediateFallthrough);
           throw pErr;
         }
-        // Jittered backoff: 300ms + random
         const delay = 300 * attempts + Math.random() * 200;
         await new Promise((r) => setTimeout(r, delay));
       }
@@ -79,51 +115,67 @@ export class AIOrchestrator {
     throw new ProviderError(`Provider ${provider.name} failed after retries`, 500, false);
   }
 
-  private async tryParseAndValidate<T>(
+  private tryParseAndValidate<T>(
     raw: string,
     schema: z.ZodSchema<T>,
     availableFacts?: Record<string, FactItem>,
     whitelistedNumerals?: Set<string>,
-  ): Promise<T> {
+  ): T {
     const cleanJson = extractCleanJson(raw);
     const parsed = JSON.parse(cleanJson);
     const validated = schema.parse(parsed);
 
-    // If facts were provided, enforce grounded-numbers validation
     if (availableFacts) {
       const citedFactIds: string[] = Array.isArray((validated as { citedFactIds?: string[] }).citedFactIds)
         ? (validated as { citedFactIds: string[] }).citedFactIds
         : [];
-
       const narrative = String((validated as { narrative?: string; summary?: string }).narrative || "");
       if (narrative.length > 0) {
-        const groundCheck = validateGroundedNumbers(narrative, citedFactIds, availableFacts, whitelistedNumerals);
-        if (!groundCheck.isValid) {
-          throw new Error(`Grounded numbers validation violation: ${groundCheck.violations.join("; ")}`);
+        const check = validateGroundedNumbers(narrative, citedFactIds, availableFacts, whitelistedNumerals);
+        if (!check.isValid) {
+          throw new Error(`Grounded numbers violation: ${check.violations.join("; ")}`);
         }
       }
     }
-
     return validated;
   }
 
-  public async execute<T>(options: OrchestratorOptions<T>): Promise<OrchestrationResult<T>> {
-    // Check canonical cache if key provided
-    let cacheKey: string | null = null;
-    if (options.cacheKeyData) {
-      const hash = computeCanonicalHash(options.cacheKeyData);
-      cacheKey = `ai:${options.taskName}:${hash}`;
-      const cached = this.responseCache.get(cacheKey);
-      if (cached && !cached.isStale) {
-        return {
-          data: cached.value as T,
-          serviceTier: "primary",
-          providerUsed: "gemini",
-          cached: true,
-        };
+  private async executeLadder<T>(
+    options: OrchestratorOptions<T>,
+    genOpts: LLMGenerateOptions,
+  ): Promise<OrchestrationResult<T>> {
+    await this.acquireSlot();
+    try {
+      // 1. Try Gemini
+      try {
+        const raw = await this.callProviderWithRetry(this.gemini, options.prompt, genOpts);
+        const data = this.tryParseAndValidate(raw, options.schema, options.availableFacts, options.whitelistedNumerals);
+        return { data, serviceTier: "primary", providerUsed: "gemini", cached: false };
+      } catch (err) {
+        logger.warn(`Primary provider (Gemini) failed for task ${options.taskName}; falling through to Groq`, {
+          error: (err as Error).message.slice(0, 150),
+        });
       }
-    }
 
+      // 2. Try Groq
+      try {
+        const raw = await this.callProviderWithRetry(this.groq, options.prompt, genOpts);
+        const data = this.tryParseAndValidate(raw, options.schema, options.availableFacts, options.whitelistedNumerals);
+        return { data, serviceTier: "backup", providerUsed: "groq", cached: false };
+      } catch (err) {
+        logger.warn(`Backup provider (Groq) failed for task ${options.taskName}; using rule-based fallback`, {
+          error: (err as Error).message.slice(0, 150),
+        });
+      }
+
+      // 3. Fallback
+      return { data: options.fallbackGenerator(), serviceTier: "rule_based", providerUsed: "rule_based", cached: false };
+    } finally {
+      this.releaseSlot();
+    }
+  }
+
+  public async execute<T>(options: OrchestratorOptions<T>): Promise<OrchestrationResult<T>> {
     const genOpts: LLMGenerateOptions = {
       systemInstruction: options.systemInstruction,
       maxOutputTokens: options.maxOutputTokens ?? 1024,
@@ -132,49 +184,22 @@ export class AIOrchestrator {
       timeoutMs: 8000,
     };
 
-    // 1. Try Gemini (Primary)
-    try {
-      const rawGemini = await this.callProviderWithRetry(this.gemini, options.prompt, genOpts);
-      const parsed = await this.tryParseAndValidate(
-        rawGemini,
-        options.schema,
-        options.availableFacts,
-        options.whitelistedNumerals,
-      );
-
-      if (cacheKey) this.responseCache.set(cacheKey, parsed);
-      return { data: parsed, serviceTier: "primary", providerUsed: "gemini", cached: false };
-    } catch (geminiErr) {
-      logger.warn(`Primary provider (Gemini) failed for task ${options.taskName}; falling through to Groq`, {
-        error: (geminiErr as Error).message.slice(0, 150),
-      });
+    if (!options.cacheKeyData) {
+      return this.executeLadder(options, genOpts);
     }
 
-    // 2. Try Groq (Backup with badge)
-    try {
-      const rawGroq = await this.callProviderWithRetry(this.groq, options.prompt, genOpts);
-      const parsed = await this.tryParseAndValidate(
-        rawGroq,
-        options.schema,
-        options.availableFacts,
-        options.whitelistedNumerals,
-      );
+    const hash = computeCanonicalHash(options.cacheKeyData);
+    const cacheKey = `ai:${options.taskName}:${hash}`;
 
-      if (cacheKey) this.responseCache.set(cacheKey, parsed);
-      return { data: parsed, serviceTier: "backup", providerUsed: "groq", cached: false };
-    } catch (groqErr) {
-      logger.warn(`Backup provider (Groq) failed for task ${options.taskName}; using rule-based fallback`, {
-        error: (groqErr as Error).message.slice(0, 150),
-      });
-    }
+    const coalesced = await this.responseCache.coalesce(cacheKey, async () => {
+      const res = await this.executeLadder(options, genOpts);
+      return res;
+    });
 
-    // 3. Deterministic rule-based fallback
-    const fallback = options.fallbackGenerator();
+    const result = coalesced.value as OrchestrationResult<T>;
     return {
-      data: fallback,
-      serviceTier: "rule_based",
-      providerUsed: "rule_based",
-      cached: false,
+      ...result,
+      cached: coalesced.source !== "fresh",
     };
   }
 }

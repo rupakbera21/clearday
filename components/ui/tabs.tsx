@@ -62,7 +62,6 @@ export function Tabs({
       {tabs.map((tab, idx) => {
         const isSelected = tab.id === activeTab;
         const tabElementId = `${tablistId}-tab-${tab.id}`;
-        const panelElementId = `${tablistId}-panel-${tab.id}`;
 
         return (
           <button
@@ -73,7 +72,6 @@ export function Tabs({
             id={tabElementId}
             role="tab"
             aria-selected={isSelected}
-            aria-controls={panelElementId}
             tabIndex={isSelected ? 0 : -1}
             onClick={() => onChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, idx)}

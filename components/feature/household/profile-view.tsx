@@ -111,6 +111,7 @@ function MemberRow({
 
       <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
         <Select
+          aria-label="Member age band"
           value={member.ageBand}
           onChange={(e) => onUpdate({ ageBand: e.target.value as Member["ageBand"] })}
           options={[
@@ -123,6 +124,7 @@ function MemberRow({
         />
 
         <Select
+          aria-label="Member sensitive health condition"
           value={member.conditionCategory}
           onChange={(e) =>
             onUpdate({
@@ -203,12 +205,10 @@ function DwellingAndHabits({
         />
       </div>
 
-      <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-slate-200">Air Purifier in Home</p>
-          <p className="text-xs text-slate-400">Mechanical HEPA filtration in living or sleeping areas.</p>
-        </div>
+      <div className="pt-4 border-t border-slate-800">
         <Switch
+          label="Air Purifier in Home"
+          description="Mechanical HEPA filtration in living or sleeping areas."
           checked={profile.hasAirPurifier}
           onChange={(checked) => onChange({ hasAirPurifier: checked, purifierType: checked ? "commercial_hepa" : "none" })}
         />
