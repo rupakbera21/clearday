@@ -55,17 +55,18 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 antialiased">
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         <PageHeader
-          title="Clearday"
           subtitle="GenAI assistant for families navigating severe winter smog and urban air pollution."
           logo={
-            <Image
-              src="/logo.png"
-              alt="Clearday Clean Air Logo"
-              width={48}
-              height={48}
-              priority
-              className="rounded-xl shadow-md border border-slate-700/60 bg-slate-900 object-contain p-1"
-            />
+            <div className="flex items-center">
+              <Image
+                src="/logo.png"
+                alt="Clearday"
+                width={160}
+                height={64}
+                priority
+                className="h-16 w-auto object-contain drop-shadow-md"
+              />
+            </div>
           }
           badge={
             <Badge variant="aqi" aqiCategory={aqiCategory}>

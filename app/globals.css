@@ -2,17 +2,23 @@
 
 @layer base {
   :root {
-    --bg-canvas: #0f172a;
-    --bg-surface: #1e293b;
-    --bg-surface-elevated: #334155;
-    --bg-surface-subtle: #1e293b80;
-    --border-subtle: #334155;
-    --border-default: #475569;
-    --border-strong: #64748b;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --ring-focus: #38bdf8;
+    --bg-canvas: #021a1a;
+    --bg-surface: #062b2b;
+    --bg-surface-elevated: #0d3d3d;
+    --bg-surface-subtle: #062b2b80;
+    --border-subtle: #0d3d3d;
+    --border-default: #134e4a;
+    --border-strong: #14b8a6;
+    --text-primary: #f0fdfa;
+    --text-secondary: #99f6e4;
+    --text-muted: #5eead4;
+    --ring-focus: #f97316;
+
+    /* Primary Sunrise Brand Accent */
+    --brand-sunrise: #f97316;
+    --brand-sunrise-glow: #ea580c;
+    --brand-teal-deep: #003c3c;
+    --brand-teal-light: #14b8a6;
 
     /* AQI semantic text tokens */
     --color-aqi-good: #34d399;
@@ -34,17 +40,22 @@
   }
 
   [data-theme="light"] {
-    --bg-canvas: #f8fafc;
+    --bg-canvas: #f0fdfa;
     --bg-surface: #ffffff;
-    --bg-surface-elevated: #f1f5f9;
-    --bg-surface-subtle: #f8fafc;
-    --border-subtle: #e2e8f0;
-    --border-default: #cbd5e1;
-    --border-strong: #94a3b8;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
-    --ring-focus: #0284c7;
+    --bg-surface-elevated: #ccfbf1;
+    --bg-surface-subtle: #f0fdfa;
+    --border-subtle: #99f6e4;
+    --border-default: #5eead4;
+    --border-strong: #0d9488;
+    --text-primary: #042f2e;
+    --text-secondary: #115e59;
+    --text-muted: #0f766e;
+    --ring-focus: #ea580c;
+
+    --brand-sunrise: #ea580c;
+    --brand-sunrise-glow: #c2410c;
+    --brand-teal-deep: #042f2e;
+    --brand-teal-light: #0d9488;
 
     --color-aqi-good: #047857;
     --color-aqi-satisfactory: #4d7c0f;

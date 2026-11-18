@@ -27,19 +27,19 @@ export default function RootLayout({
           Skip to main content
         </a>
         <div className="flex min-h-screen flex-col">
-          <header className="border-b border-slate-800 bg-slate-950/80 px-4 py-3">
+          <header className="border-b border-emerald-950/80 bg-emerald-950/90 px-4 py-3 backdrop-blur-sm">
             <div className="mx-auto flex max-w-5xl items-center justify-between">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center">
                 <Image
                   src="/logo.png"
-                  alt="Clearday Logo"
-                  width={28}
-                  height={28}
-                  className="rounded-lg object-contain"
+                  alt="Clearday"
+                  width={130}
+                  height={44}
+                  priority
+                  className="h-10 w-auto object-contain"
                 />
-                <span className="text-xl font-bold tracking-tight text-amber-400">Clearday</span>
               </div>
-              <span className="text-xs text-slate-400">Urban Smog & Health Assistant</span>
+              <span className="text-xs font-medium text-emerald-300/80">Urban Smog & Health Assistant</span>
             </div>
           </header>
           <main id="main-content" className="flex-1">
