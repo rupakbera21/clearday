@@ -3,22 +3,41 @@ import path from "node:path";
 
 let errors = 0;
 
+const CODE_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".mjs",
+  ".json",
+  ".md",
+  ".css",
+  ".yml",
+  ".yaml",
+]);
+
 function checkDocPaths(filePath) {
   if (!fs.existsSync(filePath)) return;
   const content = fs.readFileSync(filePath, "utf-8");
-  // Find backticked paths like `domain/aqi.ts`, `docs/DESIGN.md`, etc.
+  // Find backticked tokens like `domain/aqi.ts`, `docs/DESIGN.md`, `next.config.mjs`, etc.
   const pathMatches = content.matchAll(/`([a-zA-Z0-9_\-./]+\.[a-zA-Z0-9]+)`/g);
 
   for (const match of pathMatches) {
     const candidate = match[1];
-    // Filter out code expressions, command names, urls, types
+    const ext = path.extname(candidate);
+
+    // Skip urls, package names, version strings like 1.0.0, generics
     if (
-      !candidate.includes("/") ||
       candidate.startsWith("http") ||
       candidate.startsWith("npm") ||
       candidate.includes("<") ||
-      candidate.includes(">")
+      candidate.includes(">") ||
+      /^\d+\.\d+/.test(candidate)
     ) {
+      continue;
+    }
+
+    // Must either contain a slash or have a recognized code/config extension
+    if (!candidate.includes("/") && !CODE_EXTENSIONS.has(ext)) {
       continue;
     }
 
@@ -30,16 +49,29 @@ function checkDocPaths(filePath) {
   }
 }
 
+function getMdFilesRecursively(dir) {
+  let results = [];
+  if (!fs.existsSync(dir)) return results;
+  const list = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of list) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results = results.concat(getMdFilesRecursively(full));
+    } else if (entry.name.endsWith(".md")) {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
 // Check README.md
 checkDocPaths("README.md");
 
-// Check docs directory
+// Check docs directory recursively
 const docsDir = path.resolve(process.cwd(), "docs");
-if (fs.existsSync(docsDir)) {
-  const docFiles = fs.readdirSync(docsDir).filter((f) => f.endsWith(".md"));
-  for (const docFile of docFiles) {
-    checkDocPaths(path.join("docs", docFile));
-  }
+const docFiles = getMdFilesRecursively(docsDir);
+for (const docFile of docFiles) {
+  checkDocPaths(docFile);
 }
 
 if (errors > 0) {

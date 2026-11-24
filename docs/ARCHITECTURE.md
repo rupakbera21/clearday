@@ -113,4 +113,4 @@ sequenceDiagram
 1. **Client Isolation**: User personal coordinates, dwelling vulnerabilities, and family health categories are saved solely to browser `localStorage` under `clearday_storage_v1`. No database, no user tracking, no session cookies.
 2. **Minimal Upstream Payload**: Upstream AI requests receive only coarse location (`"Delhi"`), aggregated hourly air indices, and anonymous health band flags (`"has_asthma_elderly"`).
 3. **Emergency Red-Flag Interception**: If user prompt or questions match red-flag clinical conditions (chest tightness, blue lips, severe dyspnea), the system aborts AI calls and returns immediate clinical emergency hospital routing (`kb_symptoms_urgent_care`).
-4. **Content Security Policy**: Strict nonce-based CSP (`script-src 'self'`, `style-src 'self' 'unsafe-inline'`, `connect-src 'self' https://*`) enforced on all responses via `middleware.ts`.
+4. **Content Security Policy**: Strict CSP (`default-src 'self'`, `frame-ancestors 'none'`, etc.) enforced on all responses via `next.config.mjs`.

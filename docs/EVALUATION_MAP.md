@@ -10,7 +10,7 @@
 |:---|:---:|:---|:---|
 | **Problem Statement Alignment** | **HIGH (98+)** | End-to-end coverage: household profile, location-tailored routine, home hacks & CADR, alternatives, Impact Lab what-if, community one-pagers. | `components/feature/`, `domain/`, `README.md` |
 | **Code Quality & Architecture** | **HIGH (98+)** | Strict ESLint rules (`max-lines: 300`, `max-lines-per-function: 80`, `complexity: 12`), zero warnings, pure TypeScript, zero `any`. | `eslint.config.mjs`, `tsconfig.json`, `domain/*.ts` |
-| **Security & Privacy** | **HIGH (98+)** | Zero-server database, privacy logger, strict CSP middleware, bounded HTTP request bodies, Upstash Redis rate limiting. | `middleware.ts`, `services/logger.ts`, `services/http.ts` |
+| **Security & Privacy** | **HIGH (98+)** | Zero-server database, privacy logger, strict CSP headers, bounded HTTP request bodies, Upstash Redis rate limiting. | `next.config.mjs`, `services/logger.ts`, `services/http.ts` |
 | **Efficiency & Resilience** | **HIGH (98+)** | Bounded LRU cache, in-flight promise coalescing, max 8 concurrent AI slots, sub-10MB bundle, Upstash circuit breaker. | `services/air/cache.ts`, `services/ai/orchestrator.ts`, `services/ai/circuit-breaker.ts` |
 | **Testing & Verification** | **HIGH (98+)** | 35 Jest test suites (125 tests, >85% coverage), automated Playwright layout tests across 4 viewports, fresh-clone verification. | `tests/*.spec.ts`, `services/ai/__tests__/concurrency.test.ts` |
 | **Accessibility & Design** | **MID (98+)** | WCAG 2.2 AA compliance verified via `jest-axe`, dark/light/high-contrast modes, colorblind shape badges, >=44px touch targets. | `components/ui/`, `docs/DESIGN.md`, `components/feature/__tests__/axe.test.tsx` |

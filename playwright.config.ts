@@ -11,7 +11,6 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:3000",
     trace: "on-first-retry",
-    channel: "chrome",
   },
   projects: [
     {
@@ -41,7 +40,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start",
+    command: "npx next start -p 3000",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
