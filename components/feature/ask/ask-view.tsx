@@ -207,8 +207,8 @@ function useAskApi() {
         body: JSON.stringify({
           question: q,
           locationName: selectedLocation?.name ?? "Current City",
-          currentAqi: airSnapshot?.current.aqi.aqi ?? 250,
-          currentPm25: airSnapshot?.current.pm25 ?? 150,
+          currentAqi: airSnapshot?.current.aqi.aqi,
+          currentPm25: airSnapshot?.current.pm25,
           sensitiveGroupPresent: profile.members.some((m) => m.hasSensitiveCondition),
           language,
         }),

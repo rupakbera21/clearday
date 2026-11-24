@@ -12,8 +12,8 @@ import { Icon } from "@/components/ui/icon";
 
 export interface HourlyOutlookPoint {
   time: string;
-  pm25: number;
-  pm10: number;
+  pm25?: number;
+  pm10?: number;
   aqi: number;
   category: string;
 }
@@ -32,11 +32,7 @@ interface DayAggregate {
 
 function computeDailyAggregates(hourly?: HourlyOutlookPoint[]): DayAggregate[] {
   if (!hourly || hourly.length === 0) {
-    return [
-      { dateLabel: "Today", avgPm25: 285, maxPm25: 410, avgWind: 4.8, stagnationRisk: "High" },
-      { dateLabel: "Tomorrow", avgPm25: 260, maxPm25: 380, avgWind: 5.2, stagnationRisk: "High" },
-      { dateLabel: "Day 3", avgPm25: 195, maxPm25: 290, avgWind: 8.5, stagnationRisk: "Moderate" },
-    ];
+    return [];
   }
 
   const daysMap = new Map<string, HourlyOutlookPoint[]>();
@@ -50,8 +46,8 @@ function computeDailyAggregates(hourly?: HourlyOutlookPoint[]): DayAggregate[] {
 
   const days = Array.from(daysMap.entries()).slice(0, 3);
   return days.map(([dStr, items], idx) => {
-    const avgPm = items.reduce((sum, it) => sum + it.pm25, 0) / items.length;
-    const maxPm = Math.max(...items.map((it) => it.pm25));
+    const avgPm = items.reduce((sum, it) => sum + (it.pm25 ?? 0), 0) / items.length;
+    const maxPm = Math.max(...items.map((it) => it.pm25 ?? 0));
     const avgW = Math.max(3.5, 12 - (avgPm / 40));
     const stagnationRisk: "High" | "Moderate" | "Low" = avgPm > 250 ? "High" : avgPm > 120 ? "Moderate" : "Low";
 
@@ -68,6 +64,10 @@ function computeDailyAggregates(hourly?: HourlyOutlookPoint[]): DayAggregate[] {
 
 export function OutlookCard({ hourly }: OutlookCardProps) {
   const days = computeDailyAggregates(hourly);
+
+  if (days.length === 0) {
+    return null;
+  }
 
   return (
     <div

@@ -12,15 +12,17 @@ import { findExposureWindows, WindowFinderResult } from "@/domain/windows";
 import { assessAllGroups, GroupRiskAssessment } from "@/domain/risk";
 
 export const airLruCache = new BoundedLruCache<RawAirData>(60, 15 * 60 * 1000); // 15 min TTL
+export const MAX_STALE_CACHE_MS = 60 * 60 * 1000; // 60 min upper age bound for recommendations
 
 export interface RawAirData {
   latitude: number;
   longitude: number;
   timezone: string;
+  utcOffsetSeconds?: number;
   current: {
     time: string;
-    pm2_5: number;
-    pm10: number;
+    pm2_5?: number;
+    pm10?: number;
     nitrogen_dioxide?: number;
     sulphur_dioxide?: number;
     ozone?: number;
@@ -28,13 +30,13 @@ export interface RawAirData {
   };
   hourly: {
     time: string[];
-    pm2_5: number[];
-    pm10: number[];
+    pm2_5: (number | undefined)[];
+    pm10: (number | undefined)[];
   };
   weather?: {
-    windSpeedMps: number;
-    temperatureC: number;
-    relativeHumidityPercent: number;
+    windSpeedMps?: number;
+    temperatureC?: number;
+    relativeHumidityPercent?: number;
   };
   fetchedAt: string;
 }
@@ -47,8 +49,8 @@ export interface AirSnapshotResult {
   };
   current: {
     time: string;
-    pm25: number;
-    pm10: number;
+    pm25?: number;
+    pm10?: number;
     no2?: number;
     so2?: number;
     co?: number;
@@ -57,52 +59,90 @@ export interface AirSnapshotResult {
   };
   hourly: {
     time: string;
-    pm25: number;
-    pm10: number;
+    pm25?: number;
+    pm10?: number;
     aqi: number;
     category: string;
   }[];
-  stagnation: StagnationAnalysisResult;
-  exposureWindows: WindowFinderResult;
+  stagnation?: StagnationAnalysisResult | null;
+  exposureWindows?: WindowFinderResult | null;
   riskBands: GroupRiskAssessment[];
   meta: {
     isStale: boolean;
+    isExpired?: boolean;
     dataAgeMinutes: number;
     dataSource: "live_fetch" | "coalesced" | "stale_cache" | "manual_entry";
     attribution: string;
+    manualMode?: "aqi_only" | "pm25_only" | "both";
+    methodNote?: string;
   };
 }
 
+export function formatIsoWithOffset(localIso: string, offsetSeconds = 0): string {
+  if (!localIso) return new Date().toISOString();
+  if (localIso.endsWith("Z") || /[+-]\d{2}(:\d{2})?$/.test(localIso)) {
+    return localIso;
+  }
+  const sign = offsetSeconds >= 0 ? "+" : "-";
+  const absSeconds = Math.abs(offsetSeconds);
+  const hours = String(Math.floor(absSeconds / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((absSeconds % 3600) / 60)).padStart(2, "0");
+  const offsetStr = `${sign}${hours}:${minutes}`;
+  const baseTime = localIso.length === 16 ? `${localIso}:00` : localIso;
+  return `${baseTime}${offsetStr}`;
+}
+
 function parseOpenMeteoPayload(rawAir: RawAirData, standard: StandardType): AirSnapshotResult {
-  const currentAqi = computeAqi(
-    { pm25: rawAir.current.pm2_5, pm10: rawAir.current.pm10 },
-    standard,
-  );
+  const hasCurrentObs = rawAir.current.pm2_5 !== undefined || rawAir.current.pm10 !== undefined;
+  const currentAqi = hasCurrentObs
+    ? computeAqi({ pm25: rawAir.current.pm2_5, pm10: rawAir.current.pm10 }, standard)
+    : {
+        aqi: 0,
+        category: "moderate" as const,
+        categoryLabel: "Data Unavailable",
+        dominantPollutant: "None",
+        standard,
+        colorToken: "aqi-moderate",
+      };
 
   const hourlyList = rawAir.hourly.time.map((time, idx) => {
-    const pm25 = rawAir.hourly.pm2_5[idx] ?? 0;
-    const pm10 = rawAir.hourly.pm10[idx] ?? 0;
-    const aqiRes = computeAqi({ pm25, pm10 }, standard);
-    return { time, pm25, pm10, aqi: aqiRes.aqi, category: aqiRes.category };
+    const pm25 = rawAir.hourly.pm2_5[idx];
+    const pm10 = rawAir.hourly.pm10[idx];
+    const hasHourlyObs = typeof pm25 === "number" || typeof pm10 === "number";
+    const aqiRes = hasHourlyObs
+      ? computeAqi({ pm25, pm10 }, standard)
+      : { aqi: 0, category: "moderate" as const };
+    return {
+      time,
+      pm25: typeof pm25 === "number" ? pm25 : undefined,
+      pm10: typeof pm10 === "number" ? pm10 : undefined,
+      aqi: aqiRes.aqi,
+      category: aqiRes.category,
+    };
   });
 
-  const weather = rawAir.weather ?? { windSpeedMps: 1.5, temperatureC: 12.0, relativeHumidityPercent: 75 };
-  const stagnation = analyzeStagnation({
-    windSpeedMps: weather.windSpeedMps,
-    temperatureC: weather.temperatureC,
-    relativeHumidityPercent: weather.relativeHumidityPercent,
-    pm25: rawAir.current.pm2_5,
-    pm10: rawAir.current.pm10,
-  });
+  const stagnation = rawAir.current.pm2_5 !== undefined
+    ? analyzeStagnation({
+        ...rawAir.weather,
+        pm25: rawAir.current.pm2_5,
+        pm10: rawAir.current.pm10,
+      })
+    : null;
 
-  const exposureWindows = findExposureWindows(
-    hourlyList.map((h) => ({ time: h.time, pm25: h.pm25 })),
-    2,
-    rawAir.timezone,
-  );
+  const validPointsForWindows: { time: string; pm25: number }[] = [];
+  for (const h of hourlyList) {
+    if (typeof h.pm25 === "number") {
+      validPointsForWindows.push({ time: h.time, pm25: h.pm25 });
+    }
+  }
+
+  const exposureWindows = validPointsForWindows.length >= 2
+    ? findExposureWindows(validPointsForWindows, 2, rawAir.timezone, rawAir.current.time)
+    : null;
 
   const riskBands = assessAllGroups(currentAqi.category);
   const dataAgeMs = Date.now() - new Date(rawAir.fetchedAt).getTime();
+  const isExpired = dataAgeMs > MAX_STALE_CACHE_MS;
 
   return {
     location: {
@@ -126,6 +166,7 @@ function parseOpenMeteoPayload(rawAir: RawAirData, standard: StandardType): AirS
     riskBands,
     meta: {
       isStale: false,
+      isExpired,
       dataAgeMinutes: Math.max(0, Math.round(dataAgeMs / 60000)),
       dataSource: "live_fetch",
       attribution: "Data provided by Open-Meteo under CC BY 4.0. Model-based coarse estimates.",
@@ -133,19 +174,26 @@ function parseOpenMeteoPayload(rawAir: RawAirData, standard: StandardType): AirS
   };
 }
 
-async function extractWeather(weatherRes: Response | null) {
+async function extractWeather(weatherRes: Response | null): Promise<RawAirData["weather"] | undefined> {
   if (!weatherRes || !weatherRes.ok) {
-    return { windSpeedMps: 1.5, temperatureC: 12.0, relativeHumidityPercent: 75 };
+    return undefined;
   }
   try {
     const wJson = await weatherRes.json();
+    if (!wJson.current) return undefined;
+    const wind = wJson.current.wind_speed_10m;
+    const temp = wJson.current.temperature_2m;
+    const rh = wJson.current.relative_humidity_2m;
+    if (typeof wind !== "number" || typeof temp !== "number" || typeof rh !== "number") {
+      return undefined;
+    }
     return {
-      windSpeedMps: wJson.current?.wind_speed_10m ?? 1.5,
-      temperatureC: wJson.current?.temperature_2m ?? 12.0,
-      relativeHumidityPercent: wJson.current?.relative_humidity_2m ?? 75,
+      windSpeedMps: Math.round(wind * 10) / 10,
+      temperatureC: Math.round(temp * 10) / 10,
+      relativeHumidityPercent: Math.round(rh),
     };
   } catch {
-    return { windSpeedMps: 1.5, temperatureC: 12.0, relativeHumidityPercent: 75 };
+    return undefined;
   }
 }
 
@@ -153,6 +201,7 @@ interface RawAirResponse {
   latitude: number;
   longitude: number;
   timezone?: string;
+  utc_offset_seconds?: number;
   current?: {
     time?: string;
     pm2_5?: number;
@@ -164,16 +213,16 @@ interface RawAirResponse {
   };
   hourly?: {
     time?: string[];
-    pm2_5?: number[];
-    pm10?: number[];
+    pm2_5?: (number | null)[];
+    pm10?: (number | null)[];
   };
 }
 
 function formatCurrent(c?: RawAirResponse["current"]): RawAirData["current"] {
   return {
     time: c?.time ?? new Date().toISOString(),
-    pm2_5: Math.round(c?.pm2_5 ?? 50),
-    pm10: Math.round(c?.pm10 ?? 75),
+    pm2_5: typeof c?.pm2_5 === "number" ? Math.round(c.pm2_5 * 10) / 10 : undefined,
+    pm10: typeof c?.pm10 === "number" ? Math.round(c.pm10) : undefined,
     nitrogen_dioxide: c?.nitrogen_dioxide,
     sulphur_dioxide: c?.sulphur_dioxide,
     ozone: c?.ozone,
@@ -181,35 +230,40 @@ function formatCurrent(c?: RawAirResponse["current"]): RawAirData["current"] {
   };
 }
 
-function formatHourly(h?: RawAirResponse["hourly"]): RawAirData["hourly"] {
+function formatHourly(h?: RawAirResponse["hourly"], utcOffsetSeconds = 0): RawAirData["hourly"] {
+  const times = h?.time ?? [];
+  const normalizedTimes = times.map((t) => formatIsoWithOffset(t, utcOffsetSeconds));
   return {
-    time: h?.time ?? [],
-    pm2_5: h?.pm2_5 ?? [],
-    pm10: h?.pm10 ?? [],
+    time: normalizedTimes,
+    pm2_5: h?.pm2_5?.map((v) => (typeof v === "number" ? Math.round(v * 10) / 10 : undefined)) ?? [],
+    pm10: h?.pm10?.map((v) => (typeof v === "number" ? Math.round(v) : undefined)) ?? [],
   };
 }
 
 function formatAirPayload(
   airJson: RawAirResponse,
-  weatherData: { windSpeedMps: number; temperatureC: number; relativeHumidityPercent: number },
+  weatherData?: RawAirData["weather"],
 ): RawAirData {
+  const offset = airJson.utc_offset_seconds ?? 0;
   return {
     latitude: airJson.latitude,
     longitude: airJson.longitude,
     timezone: airJson.timezone ?? "UTC",
+    utcOffsetSeconds: offset,
     current: formatCurrent(airJson.current),
-    hourly: formatHourly(airJson.hourly),
+    hourly: formatHourly(airJson.hourly, offset),
     weather: weatherData,
     fetchedAt: new Date().toISOString(),
   };
 }
 
-async function fetchFromOpenMeteo(lat: number, lon: number): Promise<RawAirData> {
+async function fetchFromOpenMeteo(lat: number, lon: number, timezone = "auto"): Promise<RawAirData> {
   const roundedLat = Math.round(lat * 100) / 100;
   const roundedLon = Math.round(lon * 100) / 100;
+  const tzParam = encodeURIComponent(timezone || "auto");
 
-  const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${roundedLat}&longitude=${roundedLon}&current=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,ozone,carbon_monoxide&hourly=pm2_5,pm10&forecast_days=3&timezone=auto`;
-  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${roundedLat}&longitude=${roundedLon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&timezone=auto`;
+  const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${roundedLat}&longitude=${roundedLon}&current=pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,ozone,carbon_monoxide&hourly=pm2_5,pm10&forecast_days=3&timezone=${tzParam}`;
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${roundedLat}&longitude=${roundedLon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&wind_speed_unit=ms&timezone=${tzParam}`;
 
   const [airRes, weatherRes] = await Promise.all([
     secureFetch(airUrl, { timeoutMs: 7000 }),
@@ -232,12 +286,13 @@ export async function getAirSnapshot(
   lat: number,
   lon: number,
   standard: StandardType = "india_naqi",
+  timezone = "auto",
 ): Promise<AirSnapshotResult> {
   const cacheKey = BoundedLruCache.makeGridKey("air", lat, lon);
 
   const coalesced = await airLruCache.coalesce(
     cacheKey,
-    () => fetchFromOpenMeteo(lat, lon),
+    () => fetchFromOpenMeteo(lat, lon, timezone),
     15 * 60 * 1000,
   );
 
@@ -248,56 +303,4 @@ export async function getAirSnapshot(
   return result;
 }
 
-/**
- * Creates a synthetic air snapshot for manual entry fallback.
- */
-export function createManualAirSnapshot(
-  pm25: number,
-  standard: StandardType = "india_naqi",
-  cityName = "Manual Entry",
-): AirSnapshotResult {
-  const safePm25 = Math.max(0, pm25);
-  const safePm10 = Math.round(safePm25 * 1.5);
-  const now = new Date();
-  const aqiRes = computeAqi({ pm25: safePm25, pm10: safePm10 }, standard);
-
-  const hourly = Array.from({ length: 24 }).map((_, i) => {
-    const d = new Date(now.getTime() + i * 3600000);
-    return {
-      time: d.toISOString(),
-      pm25: safePm25,
-      pm10: safePm10,
-      aqi: aqiRes.aqi,
-      category: aqiRes.category,
-    };
-  });
-
-  const stagnation = analyzeStagnation({
-    windSpeedMps: 1.2,
-    temperatureC: 11.0,
-    relativeHumidityPercent: 80,
-    pm25: safePm25,
-    pm10: safePm10,
-  });
-
-  const exposureWindows = findExposureWindows(
-    hourly.map((h) => ({ time: h.time, pm25: h.pm25 })),
-    2,
-    "UTC",
-  );
-
-  return {
-    location: { latitude: 0, longitude: 0, timezone: "UTC" },
-    current: { time: now.toISOString(), pm25: safePm25, pm10: safePm10, aqi: aqiRes },
-    hourly,
-    stagnation,
-    exposureWindows,
-    riskBands: assessAllGroups(aqiRes.category),
-    meta: {
-      isStale: false,
-      dataAgeMinutes: 0,
-      dataSource: "manual_entry",
-      attribution: `User manually reported air readings for ${cityName}.`,
-    },
-  };
-}
+export { createManualAirSnapshot, type ManualSnapshotInput } from "./manual";

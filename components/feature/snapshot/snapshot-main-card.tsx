@@ -21,7 +21,13 @@ function MetricsGrid({ snapshot }: { snapshot: AirSnapshotResult }) {
           PM2.5 (Fine Particles)
         </span>
         <p style={{ color: "var(--text-primary)" }} className="text-lg font-bold tabular-nums mt-0.5">
-          {Math.round(snapshot.current.pm25)} <span className="text-xs font-normal text-muted">µg/m³</span>
+          {typeof snapshot.current.pm25 === "number" ? (
+            <>
+              {Math.round(snapshot.current.pm25)} <span className="text-xs font-normal text-muted">µg/m³</span>
+            </>
+          ) : (
+            <span className="text-sm font-medium text-muted">—</span>
+          )}
         </p>
       </div>
 
@@ -30,7 +36,13 @@ function MetricsGrid({ snapshot }: { snapshot: AirSnapshotResult }) {
           PM10 (Coarse Dust)
         </span>
         <p style={{ color: "var(--text-primary)" }} className="text-lg font-bold tabular-nums mt-0.5">
-          {Math.round(snapshot.current.pm10)} <span className="text-xs font-normal text-muted">µg/m³</span>
+          {typeof snapshot.current.pm10 === "number" ? (
+            <>
+              {Math.round(snapshot.current.pm10)} <span className="text-xs font-normal text-muted">µg/m³</span>
+            </>
+          ) : (
+            <span className="text-sm font-medium text-muted">—</span>
+          )}
         </p>
       </div>
 
@@ -51,6 +63,35 @@ function MetricsGrid({ snapshot }: { snapshot: AirSnapshotResult }) {
           {snapshot.meta.dataSource.replace("_", " ")}
         </p>
       </div>
+    </div>
+  );
+}
+
+function OptimalOutdoorWindowBox({
+  bestWindow,
+}: {
+  bestWindow?: NonNullable<AirSnapshotResult["exposureWindows"]>["bestWindow"] | null;
+}) {
+  if (!bestWindow) return null;
+  return (
+    <div
+      style={{
+        backgroundColor: "var(--bg-surface-elevated)",
+        borderColor: "var(--border-subtle)",
+      }}
+      className="p-3.5 rounded-xl border flex items-center justify-between gap-3 flex-wrap"
+    >
+      <div className="flex items-center gap-2">
+        <span style={{ color: "var(--color-aqi-good)" }}>
+          <Icon name="shield-check" size={17} />
+        </span>
+        <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+          Optimal Outdoor Window: {String(bestWindow.startHour).padStart(2, "0")}:00 – {String(bestWindow.endHour).padStart(2, "0")}:00
+        </span>
+      </div>
+      <span style={{ color: "var(--text-muted)" }} className="text-2xs">
+        Average PM2.5: {Math.round(bestWindow.avgPm25)} µg/m³
+      </span>
     </div>
   );
 }
@@ -86,7 +127,16 @@ export function SnapshotMainCard({
             </h2>
           </div>
           <p style={{ color: "var(--text-muted)" }} className="text-xs mt-1">
-            Updated {snapshot.meta.dataAgeMinutes}m ago via {snapshot.meta.attribution} • Model estimates for guidance
+            {snapshot.meta.dataSource === "manual_entry" ? (
+              <span className="font-medium text-amber-500 dark:text-amber-400">Manual Entry Snapshot • {snapshot.meta.attribution}</span>
+            ) : (
+              <>Updated {snapshot.meta.dataAgeMinutes}m ago via {snapshot.meta.attribution} • Model estimates for guidance</>
+            )}
+            {snapshot.current.aqi.isParticulateEstimate && (
+              <span className="block text-3xs mt-0.5 text-muted">
+                Particulate index estimate derived from manual PM2.5. Official AQI requires 24h multi-pollutant averaging.
+              </span>
+            )}
           </p>
         </div>
 
@@ -105,27 +155,7 @@ export function SnapshotMainCard({
         </div>
       </div>
 
-      {bestWindow && (
-        <div
-          style={{
-            backgroundColor: "var(--bg-surface-elevated)",
-            borderColor: "var(--border-subtle)",
-          }}
-          className="p-3.5 rounded-xl border flex items-center justify-between gap-3 flex-wrap"
-        >
-          <div className="flex items-center gap-2">
-            <span style={{ color: "var(--color-aqi-good)" }}>
-              <Icon name="shield-check" size={17} />
-            </span>
-            <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
-              Optimal Outdoor Window: {String(bestWindow.startHour).padStart(2, "0")}:00 – {String(bestWindow.endHour).padStart(2, "0")}:00
-            </span>
-          </div>
-          <span style={{ color: "var(--text-muted)" }} className="text-2xs">
-            Average PM2.5: {Math.round(bestWindow.avgPm25)} µg/m³
-          </span>
-        </div>
-      )}
+      <OptimalOutdoorWindowBox bestWindow={bestWindow} />
 
       <div style={{ borderColor: "var(--border-subtle)" }} className="pt-4 border-t">
         <MetricsGrid snapshot={snapshot} />

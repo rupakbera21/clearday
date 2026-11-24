@@ -71,7 +71,9 @@ export function createRuleBasedPlan(
     activity: "Essential outdoor tasks / afternoon transit",
     microenvironment: "outdoors" as const,
     actionAdvice: "Favorable window for short essential errands, outdoor tasks, or brief fresh-air walks.",
-    reason: `Atmospheric boundary layer is highest; ambient PM2.5 dips to day's lowest average (${windows?.bestWindow?.avgPm25 ?? 90} ug/m3).`,
+    reason: windows?.bestWindow?.avgPm25 !== undefined
+      ? `Atmospheric boundary layer is highest; ambient PM2.5 dips to day's lowest average (${Math.round(windows.bestWindow.avgPm25)} µg/m³).`
+      : "Atmospheric boundary layer is highest; ambient surface PM2.5 typically dips during midday ventilation.",
     citedFactIds: ["fact_best_window"],
     citedKnowledgeIds: knowledgeItems.slice(1, 3).map((k) => k.id),
   };

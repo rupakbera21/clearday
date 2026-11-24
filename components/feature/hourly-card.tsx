@@ -7,12 +7,11 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { HourlyAirPoint } from "@/schemas/air";
-import { WindowFinderResult } from "@/domain/windows";
+import { WindowFinderResult, getLocalHour } from "@/domain/windows";
 
 function formatHour(isoString: string): string {
   try {
-    const d = new Date(isoString);
-    return `${String(d.getHours()).padStart(2, "0")}:00`;
+    return `${String(getLocalHour(isoString)).padStart(2, "0")}:00`;
   } catch {
     return isoString.slice(11, 16) || "00:00";
   }

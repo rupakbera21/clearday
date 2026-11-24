@@ -44,6 +44,7 @@ export async function GET(req: Request) {
       parsedQuery.data.lat,
       parsedQuery.data.lon,
       parsedQuery.data.standard,
+      parsedQuery.data.timezone,
     );
 
     return NextResponse.json(snapshot, {

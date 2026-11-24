@@ -19,22 +19,49 @@ describe("services/air/client", () => {
     const snapshot = await getAirSnapshot(28.61, 77.20, "india_naqi");
 
     expect(snapshot.location.latitude).toBe(28.625);
-    expect(snapshot.current.pm25).toBe(246);
+    expect(snapshot.current.pm25).toBe(245.5);
     expect(snapshot.current.aqi.category).toBe("very_poor");
-    expect(snapshot.stagnation.stagnationSeverity).toBe("severe");
-    expect(snapshot.exposureWindows.bestWindow).not.toBeNull();
+    expect(snapshot.stagnation?.stagnationSeverity).toBe("severe");
+    expect(snapshot.exposureWindows?.bestWindow).not.toBeNull();
     expect(snapshot.riskBands.length).toBe(6);
 
     fetchSpy.mockRestore();
   });
 
-  it("creates valid synthetic air snapshot for manual entry mode", () => {
-    const manual = createManualAirSnapshot(320, "india_naqi", "Patna");
+  it("creates valid manual snapshot preserving exact reading without inventing forecast", () => {
+    const manual = createManualAirSnapshot({ pm25: 320, standard: "india_naqi", cityName: "Patna" });
 
     expect(manual.current.pm25).toBe(320);
     expect(manual.current.aqi.category).toBe("severe");
     expect(manual.meta.dataSource).toBe("manual_entry");
     expect(manual.meta.attribution).toContain("Patna");
-    expect(manual.hourly).toHaveLength(24);
+    expect(manual.hourly).toEqual([]);
+    expect(manual.exposureWindows).toBeNull();
+    expect(manual.stagnation).toBeNull();
+  });
+
+  it("passes timezone to Open-Meteo and handles missing weather data safely", async () => {
+    let capturedAirUrl = "";
+    let capturedWeatherUrl = "";
+
+    const fetchSpy = jest.spyOn(httpService, "secureFetch").mockImplementation(async (url) => {
+      if (url.includes("air-quality")) {
+        capturedAirUrl = url;
+        return new Response(JSON.stringify(airFixture), { status: 200 });
+      }
+      capturedWeatherUrl = url;
+      // Simulate weather endpoint 503 or empty
+      return new Response(JSON.stringify({}), { status: 503 });
+    });
+
+    const snapshot = await getAirSnapshot(22.57, 88.36, "india_naqi", "Asia/Kolkata");
+
+    expect(capturedAirUrl).toContain("timezone=Asia%2FKolkata");
+    expect(capturedWeatherUrl).toContain("wind_speed_unit=ms");
+    expect(capturedWeatherUrl).toContain("timezone=Asia%2FKolkata");
+    // With weather missing, stagnation returns clean caveat instead of failing
+    expect(snapshot.stagnation?.summaryCaveat).toBeDefined();
+
+    fetchSpy.mockRestore();
   });
 });

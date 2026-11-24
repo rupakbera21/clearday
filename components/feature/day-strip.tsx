@@ -8,7 +8,7 @@
 
 import React, { useState } from "react";
 import { HourlyAirPoint } from "@/schemas/air";
-import { WindowFinderResult } from "@/domain/windows";
+import { WindowFinderResult, getLocalHour } from "@/domain/windows";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -31,8 +31,7 @@ export interface DayStripProps {
 
 function formatHour(isoString: string): string {
   try {
-    const d = new Date(isoString);
-    return `${String(d.getHours()).padStart(2, "0")}:00`;
+    return `${String(getLocalHour(isoString)).padStart(2, "0")}:00`;
   } catch {
     return isoString.slice(11, 16) || "00:00";
   }
@@ -239,7 +238,7 @@ export function DayStrip({
   }
 
   const displayPoints = hourly.slice(0, 24);
-  const currentHour = currentTimeIso ? new Date(currentTimeIso).getHours() : -1;
+  const currentHour = currentTimeIso ? getLocalHour(currentTimeIso) : -1;
 
   return (
     <section

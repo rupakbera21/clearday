@@ -43,9 +43,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    // If AQI provided without PM2.5, estimate PM2.5 from Indian NAQI scale
-    const pm25Value = parsed.data.pm25 !== undefined ? parsed.data.pm25 : (parsed.data.aqi ?? 100) * 0.6;
-    const snapshot = createManualAirSnapshot(pm25Value, parsed.data.standard, parsed.data.cityName);
+    const snapshot = createManualAirSnapshot({
+      aqi: parsed.data.aqi,
+      pm25: parsed.data.pm25,
+      standard: parsed.data.standard,
+      cityName: parsed.data.cityName,
+    });
 
     return NextResponse.json(snapshot, {
       headers: {

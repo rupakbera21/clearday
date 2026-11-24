@@ -3,36 +3,12 @@
  * @description State and data fetching hook for the Air Snapshot screen.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAppStore } from "@/store/use-app-store";
 import { LocationResult } from "@/schemas/geo";
 import { ManualAirEntry, HourlyAirPoint } from "@/schemas/air";
 import { AirSnapshotResult } from "@/services/air/client";
 import { AqiCategory } from "@/domain/aqi";
-
-export function generateDefaultHourly(): HourlyAirPoint[] {
-  const base = new Date();
-  base.setMinutes(0, 0, 0);
-  const points: HourlyAirPoint[] = [];
-  const pmProfile = [240, 260, 290, 340, 380, 410, 390, 320, 260, 200, 160, 140, 135, 150, 190, 240, 290, 330, 350, 330, 300, 275, 255, 245];
-  for (let i = 0; i < 24; i++) {
-    const d = new Date(base.getTime() + i * 3600000);
-    const pm = pmProfile[i] ?? 200;
-    points.push({
-      time: d.toISOString(),
-      pm25: pm,
-      pm10: pm * 1.5,
-      aqi: {
-        aqi: Math.min(500, Math.round(pm * 1.2)),
-        category: (pm > 250 ? "severe" : pm > 120 ? "very_poor" : "poor") as AqiCategory,
-        categoryLabel: pm > 250 ? "Severe" : pm > 120 ? "Very Poor" : "Poor",
-      },
-      temperatureC: 14 + Math.sin(i / 3) * 6,
-      windSpeedKmh: 4 + (i > 11 && i < 16 ? 6 : 0),
-    });
-  }
-  return points;
-}
 
 export function useSnapshotData() {
   const selectedLocation = useAppStore((state) => state.selectedLocation);
@@ -45,20 +21,26 @@ export function useSnapshotData() {
 
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const activeRequestIdRef = useRef(0);
 
   const fetchSnapshot = useCallback(async (loc: LocationResult) => {
+    const requestId = ++activeRequestIdRef.current;
     setAirLoading(true);
     setFetchError(null);
     try {
-      const url = `/api/air/snapshot?lat=${loc.latitude}&lon=${loc.longitude}&standard=${aqiStandard}&tz=${encodeURIComponent(loc.timezone || "auto")}`;
+      const url = `/api/air/snapshot?lat=${loc.latitude}&lon=${loc.longitude}&standard=${aqiStandard}&timezone=${encodeURIComponent(loc.timezone || "auto")}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Snapshot failed (${res.status})`);
       const data: AirSnapshotResult = await res.json();
+      if (requestId !== activeRequestIdRef.current) return;
       setAirSnapshot(data);
     } catch (err) {
+      if (requestId !== activeRequestIdRef.current) return;
       setFetchError((err as Error).message);
     } finally {
-      setAirLoading(false);
+      if (requestId === activeRequestIdRef.current) {
+        setAirLoading(false);
+      }
     }
   }, [aqiStandard, setAirLoading, setAirSnapshot]);
 
@@ -80,11 +62,11 @@ export function useSnapshotData() {
   const hourlyForStrip: HourlyAirPoint[] = airSnapshot?.hourly?.length
     ? airSnapshot.hourly.map((h) => ({
         time: h.time,
-        pm25: h.pm25,
+        pm25: h.pm25 ?? 0,
         pm10: h.pm10,
         aqi: { aqi: h.aqi, category: (h.category as AqiCategory) || "moderate", categoryLabel: h.category.replace("_", " ") },
       }))
-    : generateDefaultHourly();
+    : [];
 
   return {
     selectedLocation,
