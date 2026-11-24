@@ -15,6 +15,33 @@ import { logger } from "@/services/logger";
 
 export const dynamic = "force-dynamic";
 
+function createEmergencyResponse() {
+  return {
+    data: {
+      answer:
+        "Your question mentions acute or severe respiratory symptoms (such as chest tightness, difficulty breathing, or severe distress). This may indicate a medical emergency. Please seek urgent care at the nearest hospital emergency department or call your local emergency medical service immediately.",
+      citedKnowledgeIds: ["kb_symptoms_urgent_care"],
+      safetyNotice: "Emergency advisory. Clearday provides environmental exposure guidance only, not medical care.",
+      isRuleBased: true,
+      serviceTier: "rule_based" as const,
+    },
+    serviceTier: "rule_based",
+    providerUsed: "rule_based",
+    cached: false,
+  };
+}
+
+function createAskFallback(knowledgeIds: string[]): AskResponse {
+  return {
+    answer:
+      "During severe winter smog episodes, keep doors and windows closed, operate mechanical True HEPA air purification in living areas, and wear a fitted N95 respirator if stepping outdoors. Seek immediate medical attention if experiencing respiratory distress.",
+    citedKnowledgeIds: knowledgeIds.slice(0, 2),
+    safetyNotice: "Grounded informational guidance only, not medical diagnosis.",
+    isRuleBased: true,
+    serviceTier: "rule_based",
+  };
+}
+
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
   const rateLimitResult = await limitGeneration(ip);
@@ -45,27 +72,12 @@ export async function POST(req: Request) {
 
   // Immediate red-flag symptom safety interceptor
   if (containsUrgentSymptoms(query.question)) {
-    return NextResponse.json({
-      data: {
-        answer:
-          "Your question mentions acute or severe respiratory symptoms (such as chest tightness, difficulty breathing, or severe distress). This may indicate a medical emergency. Please seek urgent care at the nearest hospital emergency department or call your local emergency medical service immediately.",
-        citedKnowledgeIds: ["kb_symptoms_urgent_care"],
-        safetyNotice: "Emergency advisory. Clearday provides environmental exposure guidance only, not medical care.",
-        isRuleBased: true,
-        serviceTier: "rule_based",
-      },
-      serviceTier: "rule_based",
-      providerUsed: "rule_based",
-      cached: false,
-    });
+    return NextResponse.json(createEmergencyResponse());
   }
 
   const keywords = query.question.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
-  const knowledgeItems = selectKnowledgeItems({
-    keywords,
-    limit: 4,
-  });
-
+  const knowledgeItems = selectKnowledgeItems({ keywords, limit: 4 });
+  const knowledgeIds = knowledgeItems.map((k) => k.id);
   const { systemInstruction, userPrompt } = buildAskPrompt(query, knowledgeItems);
 
   try {
@@ -75,30 +87,23 @@ export async function POST(req: Request) {
       prompt: userPrompt,
       systemInstruction,
       maxOutputTokens: 600,
-      fallbackGenerator: () => ({
-        answer:
-          "During severe winter smog episodes, keep doors and windows closed, operate mechanical True HEPA air purification in living areas, and wear a fitted N95 respirator if stepping outdoors. Seek immediate medical attention if experiencing respiratory distress.",
-        citedKnowledgeIds: knowledgeItems.slice(0, 2).map((k) => k.id),
-        safetyNotice: "Grounded informational guidance only, not medical diagnosis.",
-        isRuleBased: true,
-        serviceTier: "rule_based",
-      }),
-      cacheKeyData: { q: query.question, aqi: query.currentAqi, lang: query.language, v: ASK_PROMPT_VERSION },
+      fallbackGenerator: () => createAskFallback(knowledgeIds),
+      cacheKeyData: {
+        q: query.question,
+        loc: query.locationName,
+        aqi: query.currentAqi,
+        pm25: query.currentPm25,
+        sens: query.sensitiveGroupPresent,
+        lang: query.language,
+        v: ASK_PROMPT_VERSION,
+      },
     });
 
     return NextResponse.json(result);
   } catch (err) {
     logger.error("Ask Q&A route error", { error: (err as Error).message });
-    const fallbackAnswer: AskResponse = {
-      answer:
-        "During severe winter smog episodes, keep doors and windows closed, operate mechanical True HEPA air purification in living areas, and wear a fitted N95 respirator if stepping outdoors. Seek immediate medical attention if experiencing respiratory distress.",
-      citedKnowledgeIds: knowledgeItems.slice(0, 2).map((k) => k.id),
-      safetyNotice: "Grounded informational guidance only, not medical diagnosis.",
-      isRuleBased: true,
-      serviceTier: "rule_based",
-    };
     return NextResponse.json({
-      data: fallbackAnswer,
+      data: createAskFallback(knowledgeIds),
       serviceTier: "rule_based",
       providerUsed: "rule_based",
       cached: false,

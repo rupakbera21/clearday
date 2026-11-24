@@ -27,6 +27,26 @@ interface TailorPlanRequestBody {
   riskBands: GroupRiskAssessment[];
 }
 
+function buildTailorPlanCacheKey(
+  profile: HouseholdProfile,
+  windows?: WindowFinderResult,
+  riskBands: GroupRiskAssessment[] = [],
+) {
+  const best = windows?.bestWindow;
+  const worst = windows?.worstWindow;
+  return {
+    profile,
+    bestStart: best ? best.startHour : null,
+    bestEnd: best ? best.endHour : null,
+    bestPm25: best ? best.avgPm25 : null,
+    worstStart: worst ? worst.startHour : null,
+    worstEnd: worst ? worst.endHour : null,
+    worstPm25: worst ? worst.avgPm25 : null,
+    riskBands: riskBands.map((r) => `${r.group}:${r.riskLevel}`),
+    v: TAILOR_PLAN_PROMPT_VERSION,
+  };
+}
+
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
   const rateLimitResult = await limitGeneration(ip);
@@ -79,11 +99,7 @@ export async function POST(req: Request) {
       systemInstruction,
       maxOutputTokens: 1000,
       fallbackGenerator: () => createRuleBasedPlan(profile, windows, riskBands, knowledgeItems),
-      cacheKeyData: {
-        profile,
-        best: windows?.bestWindow?.avgPm25,
-        v: TAILOR_PLAN_PROMPT_VERSION,
-      },
+      cacheKeyData: buildTailorPlanCacheKey(profile, windows, riskBands),
     });
 
     return NextResponse.json(result);

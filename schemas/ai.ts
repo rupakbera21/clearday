@@ -66,8 +66,8 @@ export const impactExplanationSchema = z.object({
 export const askQuerySchema = z.object({
   question: z.string().min(3).max(300),
   locationName: z.string().max(100).default("Your Location"),
-  currentAqi: z.number().min(0).max(500),
-  currentPm25: z.number().min(0).max(2000),
+  currentAqi: z.number().min(0).max(500).optional(),
+  currentPm25: z.number().min(0).max(2000).optional(),
   sensitiveGroupPresent: z.boolean().default(false),
   language: z.enum(["en", "hi", "bn", "ur", "pa"]).default("en"),
 });
