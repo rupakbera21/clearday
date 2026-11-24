@@ -78,10 +78,14 @@ function SearchDropdown({
   results,
   activeIndex,
   onSelect,
+  hasQuery,
+  isLoading,
 }: {
   results: LocationResult[];
   activeIndex: number;
   onSelect: (loc: LocationResult) => void;
+  hasQuery: boolean;
+  isLoading: boolean;
 }) {
   return (
     <ul
@@ -94,14 +98,20 @@ function SearchDropdown({
       }}
       className="absolute z-40 left-0 right-0 mt-1.5 max-h-72 overflow-y-auto rounded-xl border shadow-xl py-1 divide-y divide-subtle"
     >
-      {results.map((loc, idx) => (
-        <SearchDropdownItem
-          key={`${loc.id}-${loc.latitude}-${loc.longitude}`}
-          loc={loc}
-          isActive={idx === activeIndex}
-          onSelect={onSelect}
-        />
-      ))}
+      {results.length > 0 ? (
+        results.map((loc, idx) => (
+          <SearchDropdownItem
+            key={`${loc.id}-${loc.latitude}-${loc.longitude}`}
+            loc={loc}
+            isActive={idx === activeIndex}
+            onSelect={onSelect}
+          />
+        ))
+      ) : hasQuery && !isLoading ? (
+        <li role="status" className="px-3.5 py-3 text-xs text-center" style={{ color: "var(--text-muted)" }}>
+          No matching cities found
+        </li>
+      ) : null}
     </ul>
   );
 }
@@ -158,18 +168,21 @@ export function CitySearch({ onSelectLocation, className = "" }: CitySearchProps
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setIsOpen]);
 
+  const showDropdown = isOpen && (results.length > 0 || (query.trim().length >= 2 && !isLoading));
+
   return (
     <div ref={searchRef} className={`relative w-full ${className}`}>
       <Input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => results.length > 0 && setIsOpen(true)}
+        onFocus={() => (results.length > 0 || query.trim().length >= 2) && setIsOpen(true)}
         onKeyDown={handleKeyDown}
         placeholder="Search city (e.g. Delhi, Mumbai, Pune, Kolkata)..."
         aria-label="Search city or location"
         role="combobox"
-        aria-expanded={isOpen && results.length > 0}
+        aria-expanded={showDropdown}
         aria-controls="city-search-results"
+        aria-activedescendant={activeIndex >= 0 && results[activeIndex] ? `city-opt-${results[activeIndex].id}` : undefined}
         aria-autocomplete="list"
         leftAddon={<Icon name="search" size={16} />}
         rightAddon={
@@ -180,11 +193,13 @@ export function CitySearch({ onSelectLocation, className = "" }: CitySearchProps
           />
         }
       />
-      {isOpen && results.length > 0 && (
+      {showDropdown && (
         <SearchDropdown
           results={results}
           activeIndex={activeIndex}
           onSelect={handleSelect}
+          hasQuery={query.trim().length >= 2}
+          isLoading={isLoading}
         />
       )}
     </div>

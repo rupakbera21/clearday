@@ -56,6 +56,9 @@ export function useCitySearch(onSelectLocation: (loc: LocationResult) => void) {
       if (items.length > 0) {
         setResults(items.slice(0, 5));
         setIsOpen(true);
+      } else if (instantMatches.length === 0) {
+        setResults([]);
+        setIsOpen(true);
       }
       setIsLoading(false);
     }, 200);
