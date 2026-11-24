@@ -10,9 +10,10 @@ describe("domain/stagnation", () => {
       pm10: 360,
     });
 
-    expect(res.stagnationSeverity).toBe("severe");
-    expect(res.sourceHint).toBe("combustion_smog");
-    expect(res.pmRatio).toBeGreaterThan(0.55);
+    expect(res).not.toBeNull();
+    expect(res!.stagnationSeverity).toBe("severe");
+    expect(res!.sourceHint).toBe("combustion_smog");
+    expect(res!.pmRatio).toBeGreaterThan(0.55);
   });
 
   it("detects crustal dust dominance when coarse fraction is high", () => {
@@ -24,7 +25,8 @@ describe("domain/stagnation", () => {
       pm10: 250,
     });
 
-    expect(res.sourceHint).toBe("crustal_dust");
-    expect(res.pmRatio).toBeLessThan(0.35);
+    expect(res).not.toBeNull();
+    expect(res!.sourceHint).toBe("crustal_dust");
+    expect(res!.pmRatio).toBeLessThan(0.35);
   });
 });

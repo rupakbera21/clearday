@@ -5,11 +5,11 @@
  */
 
 export interface MeteorologicalConditions {
-  windSpeedMps: number;
-  temperatureC: number;
-  relativeHumidityPercent: number;
-  pm25: number;
-  pm10: number;
+  windSpeedMps?: number;
+  temperatureC?: number;
+  relativeHumidityPercent?: number;
+  pm25?: number;
+  pm10?: number;
 }
 
 export interface StagnationFactor {
@@ -19,10 +19,12 @@ export interface StagnationFactor {
   explanation: string;
 }
 
+export type AerosolSourceHint = "combustion_smog" | "crustal_dust" | "mixed";
+
 export interface StagnationAnalysisResult {
   stagnationSeverity: "low" | "moderate" | "severe";
   pmRatio: number;
-  sourceHint: "combustion_smog" | "crustal_dust" | "mixed";
+  sourceHint: AerosolSourceHint;
   sourceHintLabel: string;
   contributingFactors: StagnationFactor[];
   summaryCaveat: string;
@@ -60,25 +62,42 @@ function classifySource(ratio: number): {
   };
 }
 
-/**
- * Evaluates meteorological stagnation and aerosol characteristics from weather and pollution inputs.
- */
-export function analyzeStagnation(conditions: MeteorologicalConditions): StagnationAnalysisResult {
-  const pm10 = Math.max(0.1, conditions.pm10);
-  const pm25 = Math.max(0, conditions.pm25);
-  const ratio = Math.round((pm25 / pm10) * 100) / 100;
+function buildMissingWeatherResult(
+  pm25: number,
+  ratio: number,
+  sourceHint: AerosolSourceHint,
+  sourceHintLabel: string,
+): StagnationAnalysisResult {
+  return {
+    stagnationSeverity: pm25 > 120 ? "moderate" : "low",
+    pmRatio: ratio,
+    sourceHint,
+    sourceHintLabel,
+    contributingFactors: [
+      {
+        factor: "combustion_dominance",
+        title: "Fine Particulate Fraction (PM2.5 / PM10)",
+        isTriggered: ratio >= 0.55,
+        explanation: `Fine-to-coarse ratio is ${ratio}. Meteorological weather observations are unavailable.`,
+      },
+    ],
+    summaryCaveat:
+      "Meteorological weather data (wind, inversion, humidity) was unavailable from the provider. Atmospheric stagnation cannot be assessed.",
+  };
+}
 
-  const isLowWind = conditions.windSpeedMps < 2.0;
-  const isCold = conditions.temperatureC < 14.0;
-  const isHighHumidity = conditions.relativeHumidityPercent > 70;
+function buildStagnationFactors(
+  conditions: MeteorologicalConditions,
+  ratio: number,
+): { factors: StagnationFactor[]; triggeredCount: number } {
+  const isLowWind = conditions.windSpeedMps! < 2.0;
+  const isCold = conditions.temperatureC! < 14.0;
+  const isHighHumidity = conditions.relativeHumidityPercent! > 70;
 
   let triggeredCount = 0;
   if (isLowWind) triggeredCount++;
   if (isCold) triggeredCount++;
   if (isHighHumidity) triggeredCount++;
-
-  const stagnationSeverity = determineSeverity(triggeredCount, conditions.pm25);
-  const { sourceHint, sourceHintLabel } = classifySource(ratio);
 
   const factors: StagnationFactor[] = [
     {
@@ -113,6 +132,35 @@ export function analyzeStagnation(conditions: MeteorologicalConditions): Stagnat
     },
   ];
 
+  return { factors, triggeredCount };
+}
+
+/**
+ * Evaluates meteorological stagnation and aerosol characteristics from weather and pollution inputs.
+ * If weather observations are missing, suppresses weather-dependent factors instead of assuming defaults.
+ */
+export function analyzeStagnation(conditions?: MeteorologicalConditions | null): StagnationAnalysisResult | null {
+  if (!conditions || conditions.pm25 === undefined) {
+    return null;
+  }
+
+  const pm10 = Math.max(0.1, conditions.pm10 ?? conditions.pm25);
+  const pm25 = Math.max(0, conditions.pm25);
+  const ratio = Math.round((pm25 / pm10) * 100) / 100;
+  const { sourceHint, sourceHintLabel } = classifySource(ratio);
+
+  const hasWeather =
+    conditions.windSpeedMps !== undefined &&
+    conditions.temperatureC !== undefined &&
+    conditions.relativeHumidityPercent !== undefined;
+
+  if (!hasWeather) {
+    return buildMissingWeatherResult(pm25, ratio, sourceHint, sourceHintLabel);
+  }
+
+  const { factors, triggeredCount } = buildStagnationFactors(conditions, ratio);
+  const stagnationSeverity = determineSeverity(triggeredCount, conditions.pm25);
+
   return {
     stagnationSeverity,
     pmRatio: ratio,
@@ -120,6 +168,6 @@ export function analyzeStagnation(conditions: MeteorologicalConditions): Stagnat
     sourceHintLabel,
     contributingFactors: factors,
     summaryCaveat:
-      "Indicative heuristic estimate derived from coarse meteorological model data. Local hotspots vary across neighborhoods.",
+      "Indicative heuristic estimate derived from meteorological model data. Local hotspots vary across neighborhoods.",
   };
 }
